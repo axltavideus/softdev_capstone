@@ -1,0 +1,53 @@
+.upload-page {
+  padding: 20px;
+}
+
+.upload-page h2 {
+  margin-bottom: 10px;
+}
+
+.upload-page label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.upload-page input[type="file"] {
+  margin-bottom: 10px;
+}
+
+.upload-page button {
+  background-color: #d3d3d3;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.upload-page button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.project-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.project-table th,
+.project-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.project-table th {
+  background-color: #f2f2f2;
+  text-align: left;
+}
+
+.project-table a {
+  color: #0000ee;
+  text-decoration: underline;
+  cursor: pointer;
+}
