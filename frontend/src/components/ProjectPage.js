@@ -9,6 +9,9 @@ function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [keluarValues, setKeluarValues] = useState({});
+
+  // Fetch project data
   useEffect(() => {
     const fetchProject = async () => {
       try {
@@ -23,7 +26,20 @@ function ProjectPage() {
     fetchProject();
   }, [id]);
 
-  const [keluarValues, setKeluarValues] = useState({});
+  // Load keluarValues from localStorage on mount
+  useEffect(() => {
+    const storedKeluarValues = localStorage.getItem(`keluarValues_${id}`);
+    if (storedKeluarValues) {
+      setKeluarValues(JSON.parse(storedKeluarValues));
+    }
+  }, [id]);
+
+  // Save keluarValues to localStorage whenever it changes
+  useEffect(() => {
+    if (Object.keys(keluarValues).length > 0) {
+      localStorage.setItem(`keluarValues_${id}`, JSON.stringify(keluarValues));
+    }
+  }, [keluarValues, id]);
   const [inputValues, setInputValues] = useState({});
   const [errorMessages, setErrorMessages] = useState({});
 
@@ -113,7 +129,7 @@ function ProjectPage() {
   return (
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
-      <p>Project Code: {project.projectCode}</p>
+      <p>Nomor SPK: {project.projectCode}</p>
       <p>Progress: {project.progress}</p>
       <h3>Items in this project:</h3>
       {Object.keys(groupedItems).map((category) => (
