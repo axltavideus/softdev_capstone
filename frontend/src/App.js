@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import UploadPage from './components/UploadPage';
 import ProjectPage from './components/ProjectPage';
+import MasterDataMasukPage from './components/MasterDataMasukPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<UploadPage />} />
             <Route path="/project/:id" element={<ProjectPage />} />
+            <Route path="/masterdata/masuk" element={<MasterDataMasukPage />} />
           </Routes>
         </main>
       </div>
