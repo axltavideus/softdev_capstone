@@ -1,6 +1,7 @@
 .project-page {
   padding: 20px;
   font-family: Arial, sans-serif;
+  font-weight: 550;
 }
 
 .category-group {
@@ -33,8 +34,8 @@
 }
 
 .project-page .project-table th {
-  background-color: #ffffff;
-  font-weight: 600;
+  background-color: #ececec;
+  font-weight: 700;
 }
 
 /* Set fixed widths for columns */
@@ -55,7 +56,7 @@
 
 .project-page .project-table th:nth-child(4),
 .project-page .project-table td:nth-child(4) {
-  width: 80px; /* T. QTY */
+  width: 120px; /* T. QTY - increased width for input */
 }
 
 .project-page .project-table th:nth-child(5),
@@ -75,7 +76,7 @@
 
 /* Removed zebra striping */
 .project-page .project-table tbody tr:nth-child(even) {
-  background-color: transparent;
+  background-color: #ffffff;
 }
 
 .project-page .project-table tbody tr:hover {
@@ -90,6 +91,17 @@
 
 .project-page .qty-input {
   width: 60px;
+  padding: 4px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  text-align: right;
+  background-color: #f9f9f9;
+}
+
+.project-page .total-qty-input {
+  width: 50%;
+  box-sizing: border-box;
   padding: 4px;
   font-size: 1em;
   border: 1px solid #ccc;
@@ -125,4 +137,28 @@
 
 .project-page a:hover {
   text-decoration: underline;
+}
+
+.submit-all-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+  z-index: 1000;
+}
+
+.submit-all-button:hover {
+  background-color: #0056b3;
+}
+
+.maxed-out-row {
+  background-color: #5CF974 !important;
 }

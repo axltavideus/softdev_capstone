@@ -1,4 +1,4 @@
-const { Project, BomItem } = require('../models');
+const { Project, BomItem, BarangKeluar } = require('../models');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
@@ -186,6 +186,47 @@ module.exports = {
       res.json({ message: 'File uploaded and BOM items stored successfully' });
     } catch (error) {
       console.error('Error processing Excel file:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  async addBarangKeluar(req, res) {
+    try {
+      const { projectId, itemId } = req.params;
+      const { tanggal, keluar, keterangan, namaProjek } = req.body;
+
+      // Validate input
+      if (!tanggal || keluar === undefined || !namaProjek) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Find BomItem
+      const bomItem = await BomItem.findOne({ where: { id: itemId, projectId } });
+      if (!bomItem) {
+        return res.status(404).json({ error: 'BOM Item not found' });
+      }
+
+      // Calculate total keluar for this bomItem
+      const totalKeluar = await BarangKeluar.sum('keluar', { where: { bomItemId: itemId } }) || 0;
+
+      // Check if new keluar exceeds totalQty
+      if (totalKeluar + keluar > bomItem.totalQty) {
+        return res.status(400).json({ error: 'Total keluar exceeds totalQty' });
+      }
+
+      // Create new BarangKeluar record with deskripsi from BomItem
+      const newBarangKeluar = await BarangKeluar.create({
+        tanggal,
+        deskripsi: bomItem.deskripsi,
+        keluar,
+        keterangan,
+        namaProjek,
+        bomItemId: itemId,
+      });
+
+      res.status(201).json(newBarangKeluar);
+    } catch (error) {
+      console.error('Error adding BarangKeluar:', error);
       res.status(500).json({ error: error.message });
     }
   },

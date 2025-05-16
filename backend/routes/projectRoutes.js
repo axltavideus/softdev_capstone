@@ -20,4 +20,7 @@ router.post('/:projectId/bomitems', projectController.createBomItem);
 router.put('/:projectId/bomitems/:itemId', projectController.updateBomItem);
 router.delete('/:projectId/bomitems/:itemId', projectController.deleteBomItem);
 
+// BarangKeluar route for adding keluar input
+router.post('/:projectId/bomitems/:itemId/keluar', projectController.addBarangKeluar);
+
 module.exports = router;
