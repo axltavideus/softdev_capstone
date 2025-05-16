@@ -209,10 +209,10 @@ module.exports = {
       // Calculate total keluar for this bomItem
       const totalKeluar = await BarangKeluar.sum('keluar', { where: { bomItemId: itemId } }) || 0;
 
-      // Check if new keluar exceeds totalQty
-      if (totalKeluar + keluar > bomItem.totalQty) {
-        return res.status(400).json({ error: 'Total keluar exceeds totalQty' });
-      }
+      // Removed validation to allow input above totalQty
+      // if (totalKeluar + keluar > bomItem.totalQty) {
+      //   return res.status(400).json({ error: 'Total keluar exceeds totalQty' });
+      // }
 
       // Create new BarangKeluar record with deskripsi from BomItem
       const newBarangKeluar = await BarangKeluar.create({
