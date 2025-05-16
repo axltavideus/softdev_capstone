@@ -1,0 +1,128 @@
+.project-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.category-group {
+  margin-bottom: 30px;
+}
+
+.category-title {
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.project-page .project-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  table-layout: fixed;
+}
+
+.project-page .project-table th,
+.project-page .project-table td {
+  border: 1px solid #ffffff;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.project-page .project-table th {
+  background-color: #ffffff;
+  font-weight: 600;
+}
+
+/* Set fixed widths for columns */
+.project-page .project-table th:nth-child(1),
+.project-page .project-table td:nth-child(1) {
+  width: 80px; /* ID BARANG */
+}
+
+.project-page .project-table th:nth-child(2),
+.project-page .project-table td:nth-child(2) {
+  width: 250px; /* MATERIAL PLAT & PROFIL */
+}
+
+.project-page .project-table th:nth-child(3),
+.project-page .project-table td:nth-child(3) {
+  width: 80px; /* QTY/UNIT */
+}
+
+.project-page .project-table th:nth-child(4),
+.project-page .project-table td:nth-child(4) {
+  width: 80px; /* T. QTY */
+}
+
+.project-page .project-table th:nth-child(5),
+.project-page .project-table td:nth-child(5) {
+  width: 80px; /* SATUAN */
+}
+
+.project-page .project-table th:nth-child(6),
+.project-page .project-table td:nth-child(6) {
+  width: 150px; /* KETERANGAN */
+}
+
+.project-page .project-table th:nth-child(7),
+.project-page .project-table td:nth-child(7) {
+  width: 100px; /* STATUS */
+}
+
+/* Removed zebra striping */
+.project-page .project-table tbody tr:nth-child(even) {
+  background-color: transparent;
+}
+
+.project-page .project-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.project-page .project-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-page .qty-input {
+  width: 60px;
+  padding: 4px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  text-align: right;
+  background-color: #f9f9f9;
+}
+
+.project-page .status-label {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: white;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+}
+
+.project-page .status-belum {
+  background-color: #d9534f; /* red */
+}
+
+.project-page .status-lain {
+  background-color: #5bc0de; /* blue */
+}
+
+.project-page a {
+  display: inline-block;
+  margin-top: 20px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.project-page a:hover {
+  text-decoration: underline;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import './UploadPage.css';
 
 function UploadPage() {
@@ -71,7 +72,7 @@ function UploadPage() {
           {projects.map((project) => (
             <tr key={project.id}>
               <td>
-                <a href="#">{project.projectName}</a>
+                <Link to={`/project/${project.id}`}>{project.projectName}</Link>
               </td>
               <td>{project.projectCode}</td>
               <td>

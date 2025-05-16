@@ -23,6 +23,7 @@
   cursor: pointer;
   font-weight: bold;
   margin-bottom: 20px;
+  margin-left: 10px;
 }
 
 .upload-page button:disabled {
@@ -37,17 +38,17 @@
 
 .project-table th,
 .project-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ffffff;
   padding: 8px;
 }
 
 .project-table th {
-  background-color: #f2f2f2;
+  background-color: #ffffff;
   text-align: left;
 }
 
 .project-table a {
-  color: #0000ee;
+  color: black;
   text-decoration: underline;
   cursor: pointer;
 }
