@@ -14,13 +14,18 @@ const sequelize = new Sequelize(
 
 const Project = require('./project')(sequelize);
 const BomItem = require('./bomItem')(sequelize);
+const BarangKeluar = require('./barangkeluar')(sequelize);
 
 // Associations
 Project.hasMany(BomItem, { as: 'bomItems', foreignKey: 'projectId' });
 BomItem.belongsTo(Project, { foreignKey: 'projectId' });
 
+BomItem.hasMany(BarangKeluar, { as: 'barangKeluars', foreignKey: 'bomItemId' });
+BarangKeluar.belongsTo(BomItem, { foreignKey: 'bomItemId' });
+
 module.exports = {
   sequelize,
   Project,
   BomItem,
+  BarangKeluar,
 };
