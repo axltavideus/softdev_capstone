@@ -162,3 +162,15 @@
 .maxed-out-row {
   background-color: #5CF974 !important;
 }
+
+.red-row {
+  background-color: #ffcccc; /* light red */
+}
+
+.green-row {
+  background-color: #ccffcc; /* light green */
+}
+
+.blue-row {
+  background-color: #cce5ff; /* light blue */
+}
