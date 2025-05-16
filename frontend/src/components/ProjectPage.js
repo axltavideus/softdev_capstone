@@ -10,6 +10,7 @@ function ProjectPage() {
   const [error, setError] = useState(null);
 
   const [keluarValues, setKeluarValues] = useState({});
+  const [checkedStatus, setCheckedStatus] = useState({});
 
   // Fetch project data
   useEffect(() => {
@@ -17,6 +18,25 @@ function ProjectPage() {
       try {
         const res = await axios.get(`http://localhost:5000/api/projects/${id}`);
         setProject(res.data);
+
+        // Initialize checkedStatus from bomItems
+        const initialChecked = {};
+        res.data.bomItems.forEach(item => {
+          initialChecked[item.id] = item.checked || false;
+        });
+        setCheckedStatus(initialChecked);
+
+        // Initialize keluarValues from localStorage on mount or default to 0
+        const storedKeluarValues = localStorage.getItem(`keluarValues_${id}`);
+        if (storedKeluarValues) {
+          setKeluarValues(JSON.parse(storedKeluarValues));
+        } else {
+          const initialKeluar = {};
+          res.data.bomItems.forEach(item => {
+            initialKeluar[item.id] = 0;
+          });
+          setKeluarValues(initialKeluar);
+        }
       } catch (err) {
         setError('Failed to fetch project data');
       } finally {
@@ -26,38 +46,34 @@ function ProjectPage() {
     fetchProject();
   }, [id]);
 
-  // Load keluarValues from localStorage on mount
-  useEffect(() => {
-    const storedKeluarValues = localStorage.getItem(`keluarValues_${id}`);
-    if (storedKeluarValues) {
-      setKeluarValues(JSON.parse(storedKeluarValues));
-    }
-  }, [id]);
-
   // Save keluarValues to localStorage whenever it changes
   useEffect(() => {
     if (Object.keys(keluarValues).length > 0) {
       localStorage.setItem(`keluarValues_${id}`, JSON.stringify(keluarValues));
     }
   }, [keluarValues, id]);
+
   const [inputValues, setInputValues] = useState({});
   const [errorMessages, setErrorMessages] = useState({});
-
-  const handleTotalQtyChange = (itemId, value) => {
-    setProject(prevProject => {
-      const updatedBomItems = prevProject.bomItems.map(item => {
-        if (item.id === itemId) {
-          return { ...item, totalQty: value };
-        }
-        return item;
-      });
-      return { ...prevProject, bomItems: updatedBomItems };
-    });
-  };
 
   const handleInputChange = (itemId, value) => {
     setInputValues(prev => ({ ...prev, [itemId]: value }));
     setErrorMessages(prev => ({ ...prev, [itemId]: '' }));
+  };
+
+  const handleCheckboxChange = async (itemId) => {
+    const newChecked = !checkedStatus[itemId];
+    setCheckedStatus(prev => ({ ...prev, [itemId]: newChecked }));
+
+    try {
+      await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+        checked: newChecked,
+      });
+    } catch (error) {
+      setErrorMessages(prev => ({ ...prev, [itemId]: 'Failed to update status' }));
+      // Revert checkbox state on failure
+      setCheckedStatus(prev => ({ ...prev, [itemId]: !newChecked }));
+    }
   };
 
   const handleSubmitAll = async () => {
@@ -83,11 +99,7 @@ function ProjectPage() {
       const currentKeluar = keluarValues[itemId] || 0;
       const newTotalKeluar = currentKeluar + keluarValue;
 
-      if (newTotalKeluar > totalQty) {
-        setErrorMessages(prev => ({ ...prev, [itemId]: 'Total keluar exceeds totalQty' }));
-        hasError = true;
-        continue;
-      }
+      // Allow input above max, so no error here
 
       try {
         await axios.post(`http://localhost:5000/api/projects/${project.id}/bomitems/${itemId}/keluar`, {
@@ -101,6 +113,19 @@ function ProjectPage() {
         setKeluarValues(prev => ({ ...prev, [itemId]: newTotalKeluar }));
         setInputValues(prev => ({ ...prev, [itemId]: '' }));
         setErrorMessages(prev => ({ ...prev, [itemId]: '' }));
+
+        // Auto update checked status based on newTotalKeluar and totalQty
+        if (newTotalKeluar === totalQty) {
+          await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+            checked: true,
+          });
+          setCheckedStatus(prev => ({ ...prev, [itemId]: true }));
+        } else if (newTotalKeluar > totalQty) {
+          await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+            checked: false,
+          });
+          setCheckedStatus(prev => ({ ...prev, [itemId]: false }));
+        }
       } catch (error) {
         setErrorMessages(prev => ({ ...prev, [itemId]: 'Failed to save keluar' }));
         hasError = true;
@@ -126,6 +151,21 @@ function ProjectPage() {
     return groups;
   }, {});
 
+  const getRowClassName = (item) => {
+    const sumKeluar = keluarValues[item.id] || 0;
+    const checked = checkedStatus[item.id] || false;
+    if (sumKeluar > item.totalQty) {
+      return 'red-row';
+    }
+    if (sumKeluar === item.totalQty) {
+      return 'green-row';
+    }
+    if (sumKeluar < item.totalQty && checked) {
+      return 'blue-row';
+    }
+    return '';
+  };
+
   return (
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
@@ -138,6 +178,7 @@ function ProjectPage() {
           <table className="project-table">
             <thead>
               <tr>
+                <th>Done</th>
                 <th>ID BARANG</th>
                 <th>MATERIAL PLAT &amp; PROFIL</th>
                 <th>QTY/UNIT</th>
@@ -147,15 +188,18 @@ function ProjectPage() {
               </tr>
             </thead>
             <tbody>
-              {groupedItems[category].map((item) => (
-                  <tr
-                    key={item.id}
-                    className={
-                      (keluarValues[item.id] || 0) >= item.totalQty
-                        ? 'maxed-out-row'
-                        : ''
-                    }
-                  >
+              {groupedItems[category].map((item) => {
+                const sumKeluar = keluarValues[item.id] || 0;
+                const checked = checkedStatus[item.id] || false;
+                return (
+                  <tr key={item.id} className={getRowClassName(item)}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleCheckboxChange(item.id)}
+                      />
+                    </td>
                     <td>{item.idBarang}</td>
                     <td>{item.deskripsi}</td>
                     <td>{item.qtyPerUnit}</td>
@@ -163,12 +207,11 @@ function ProjectPage() {
                       <input
                         type="number"
                         min="0"
-                        max={item.totalQty}
                         value={inputValues[item.id] || ''}
                         onChange={(e) => handleInputChange(item.id, e.target.value)}
                         className="total-qty-input"
                         placeholder={`Max ${item.totalQty}`}
-                        disabled={(keluarValues[item.id] || 0) >= item.totalQty}
+                        disabled={checked}
                       />
                       {errorMessages[item.id] && (
                         <div className="error-message">{errorMessages[item.id]}</div>
@@ -178,8 +221,8 @@ function ProjectPage() {
                     <td>{item.satuan}</td>
                     <td>{item.keterangan}</td>
                   </tr>
-
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
