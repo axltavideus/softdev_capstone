@@ -1,0 +1,76 @@
+.keluar-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.keluar-page h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.search-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.search-input {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 250px;
+}
+
+.keterangan-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.keluar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.keluar-table th,
+.keluar-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.keluar-table th {
+  background-color: #f2f2f2;
+  color: #555;
+}
+
+.keluar-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.keluar-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.download-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4CAF50; /* bright green */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+  background-color: #45a049;
+}
