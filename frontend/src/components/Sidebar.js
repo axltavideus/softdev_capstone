@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -7,24 +7,12 @@ function Sidebar() {
     <aside className="sidebar">
       <nav>
         <ul>
-          <li>
-            <NavLink to="/" className={({ isActive }) => isActive ? 'sidebar-button active' : 'sidebar-button'}>
-              Daftar Projek
-            </NavLink>
-          </li>
+          <li><Link to="/" className="sidebar-button">Daftar Projek</Link></li>
           <li>
             <div className="sidebar-section">Master Data</div>
             <ul>
-              <li>
-                <NavLink to="/masterdata/keluar" className={({ isActive }) => isActive ? 'sidebar-button active' : 'sidebar-button'}>
-                  Keluar
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/masterdata/masuk" className={({ isActive }) => isActive ? 'sidebar-button active' : 'sidebar-button'}>
-                  Masuk
-                </NavLink>
-              </li>
+              <li><Link to="/keluar" className="sidebar-button">Keluar</Link></li>
+              <li><button className="sidebar-button">Masuk</button></li>
             </ul>
           </li>
         </ul>
