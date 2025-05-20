@@ -16,7 +16,7 @@ function App() {
             <Route path="/" element={<UploadPage />} />
             <Route path="/project/:id" element={<ProjectPage />} />
             <Route path="/keluar" element={<KeluarPage />} />
-            <Route path="/masterdata/masuk" element={<MasterDataMasukPage />} />
+            <Route path="/masuk" element={<MasterDataMasukPage />} />
           </Routes>
         </main>
       </div>
