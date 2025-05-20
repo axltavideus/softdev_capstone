@@ -12,7 +12,7 @@ function Sidebar() {
             <div className="sidebar-section">Master Data</div>
             <ul>
               <li><Link to="/keluar" className="sidebar-button">Keluar</Link></li>
-              <li><button className="sidebar-button">Masuk</button></li>
+              <li><Link to="/masuk" className="sidebar-button">Masuk</Link></li>
             </ul>
           </li>
         </ul>
