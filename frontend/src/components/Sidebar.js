@@ -9,7 +9,7 @@ function Sidebar() {
         <ul>
           <li><Link to="/" className="sidebar-button">Daftar Projek</Link></li>
           <li>
-            <div className="sidebar-section">Master Data</div>
+          <li><Link to="/master_data" className="sidebar-button">Master Data</Link></li>
             <ul>
               <li><Link to="/keluar" className="sidebar-button">Keluar</Link></li>
               <li><Link to="/masuk" className="sidebar-button">Masuk</Link></li>

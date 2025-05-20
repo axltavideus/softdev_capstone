@@ -19,13 +19,16 @@ app.use('/api/barangmasuk', barangmasukRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/barangkeluar', barangkeluarRoutes);
 
+const masterDataRoutes = require('./routes/masterDataRoutes');
+app.use('/api/masterdata', masterDataRoutes);
+
 // Root route
 app.get('/', (req, res) => {
   res.send('Storage Management Backend is running');
 });
 
 // Sync database and start server
-sequelize.sync()
+sequelize.sync({ alter: true })
   .then(() => {
     console.log('Database synced');
     app.listen(PORT, () => {

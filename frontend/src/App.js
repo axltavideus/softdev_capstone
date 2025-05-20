@@ -5,6 +5,8 @@ import UploadPage from './components/UploadPage';
 import ProjectPage from './components/ProjectPage';
 import KeluarPage from './components/KeluarPage';
 import MasterDataMasukPage from './components/MasterDataMasukPage';
+import MasterData from './components/master_data';
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
             <Route path="/project/:id" element={<ProjectPage />} />
             <Route path="/keluar" element={<KeluarPage />} />
             <Route path="/masuk" element={<MasterDataMasukPage />} />
+            <Route path="/master_data" element={<MasterData />} />
           </Routes>
         </main>
       </div>
