@@ -15,6 +15,7 @@ const sequelize = new Sequelize(
 const Project = require('./project')(sequelize);
 const BomItem = require('./bomItem')(sequelize);
 const BarangKeluar = require('./barangkeluar')(sequelize);
+const BarangMasuk = require('./barangmasuk')(sequelize);
 
 // Associations
 Project.hasMany(BomItem, { as: 'bomItems', foreignKey: 'projectId' });
@@ -28,4 +29,5 @@ module.exports = {
   Project,
   BomItem,
   BarangKeluar,
+  BarangMasuk,
 };
