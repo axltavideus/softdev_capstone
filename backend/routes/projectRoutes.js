@@ -23,4 +23,10 @@ router.delete('/:projectId/bomitems/:itemId', projectController.deleteBomItem);
 // BarangKeluar route for adding keluar input
 router.post('/:projectId/bomitems/:itemId/keluar', projectController.addBarangKeluar);
 
+// New route to update keterangan of a BarangKeluar item
+router.put('/barangkeluar/:id/keterangan', projectController.updateBarangKeluarKeterangan);
+
+// New route to get barang keluar data, optionally filtered by projectId
+router.get('/:projectId/barangkeluar', projectController.getBarangKeluar);
+
 module.exports = router;
