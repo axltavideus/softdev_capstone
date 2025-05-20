@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -6,11 +7,11 @@ function Sidebar() {
     <aside className="sidebar">
       <nav>
         <ul>
-          <li><button className="sidebar-button">Daftar Projek</button></li>
+          <li><Link to="/" className="sidebar-button">Daftar Projek</Link></li>
           <li>
             <div className="sidebar-section">Master Data</div>
             <ul>
-              <li><button className="sidebar-button">Keluar</button></li>
+              <li><Link to="/keluar" className="sidebar-button">Keluar</Link></li>
               <li><button className="sidebar-button">Masuk</button></li>
             </ul>
           </li>

@@ -1,0 +1,78 @@
+.masterdata-masuk-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.masterdata-masuk-page h1 {
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.search-container {
+  margin-bottom: 15px;
+}
+
+.search-input {
+  width: 300px;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-entry-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.form-input {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 150px;
+  box-sizing: border-box;
+}
+
+.masukkan-barang-button {
+  background-color: #90ee90;
+  border: none;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  align-self: center;
+  white-space: nowrap;
+  transition: background-color 0.3s ease;
+}
+
+.masukkan-barang-button:hover {
+  background-color: #76c776;
+}
+
+.masuk-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.masuk-table th,
+.masuk-table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.masuk-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.masuk-table td b {
+  font-weight: bold;
+}
