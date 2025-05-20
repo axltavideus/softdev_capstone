@@ -12,8 +12,12 @@ function KeluarPage() {
   useEffect(() => {
     const fetchBarangKeluar = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/projects/1/barangkeluar`); // Removed search query to revert to previous working version
-        setBarangKeluar(res.data);
+        const response = await fetch('http://localhost:5000/api/barangkeluar');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setBarangKeluar(data);
       } catch (err) {
         setError('Failed to fetch barang keluar data');
       } finally {
