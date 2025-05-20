@@ -4,6 +4,8 @@ const cors = require('cors');
 const { sequelize } = require('./models');
 const projectRoutes = require('./routes/projectRoutes');
 const barangmasukRoutes = require('./routes/barangmasukRoutes');
+const testRoutes = require('./routes/testRoutes');
+const barangkeluarRoutes = require('./routes/barangkeluarRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +16,8 @@ app.use(express.json());
 // Routes
 app.use('/api/projects', projectRoutes);
 app.use('/api/barangmasuk', barangmasukRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/barangkeluar', barangkeluarRoutes);
 
 // Root route
 app.get('/', (req, res) => {
