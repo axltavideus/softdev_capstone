@@ -17,6 +17,7 @@ const Project = require('./project')(sequelize);
 const BomItem = require('./bomItem')(sequelize);
 const BarangKeluar = require('./barangkeluar')(sequelize);
 const BarangMasuk = require('./barangmasuk')(sequelize);
+const MasterData = require('./master_data')(sequelize);
 
 // Associations
 Project.hasMany(BomItem, { as: 'bomItems', foreignKey: 'projectId' });
@@ -31,4 +32,5 @@ module.exports = {
   BomItem,
   BarangKeluar,
   BarangMasuk,
+  MasterData,
 };
