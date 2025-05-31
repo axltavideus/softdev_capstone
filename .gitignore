@@ -1,2 +1,4 @@
 node_modules
 backend/uploads/
+backend/server.crt
+backend/server.key
