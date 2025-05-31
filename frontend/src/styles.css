@@ -17,3 +17,20 @@ body {
   padding: 20px;
   overflow-y: auto;
 }
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  padding-left: 30px;
+}
+
+.search-container .fa-search {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}

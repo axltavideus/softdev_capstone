@@ -79,7 +79,7 @@ function UploadPage() {
                 <progress
                   value={project.progress}
                   max="1"
-                  style={{ width: '150px', height: '15px' }}
+                  style={{ width: '150px', height: '15px', color: 'green' }}
                 />
               </td>
             </tr>

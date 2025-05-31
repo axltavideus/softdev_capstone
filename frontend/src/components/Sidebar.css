@@ -8,6 +8,7 @@
   padding: 10px;
   box-sizing: border-box;
   border-right: 1px solid #bbb;
+  font-family: 'Inter', sans-serif;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 

@@ -93,6 +93,19 @@ module.exports = {
       const bomItem = await BomItem.findOne({ where: { id: itemId, projectId } });
       if (!bomItem) return res.status(404).json({ error: 'BOM Item not found' });
       await bomItem.update(req.body);
+
+      // Calculate project progress based on checked bomItems
+      const bomItems = await BomItem.findAll({ where: { projectId } });
+      const totalItems = bomItems.length;
+      const checkedItems = bomItems.filter(item => item.checked).length;
+      const progress = totalItems > 0 ? checkedItems / totalItems : 0;
+
+      // Update project progress
+      const project = await Project.findByPk(projectId);
+      if (project) {
+        await project.update({ progress });
+      }
+
       res.json(bomItem);
     } catch (error) {
       res.status(500).json({ error: error.message });
