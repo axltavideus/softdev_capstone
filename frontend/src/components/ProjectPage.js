@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import Tesseract from 'tesseract.js';
+import ProjectFormPrint from './ProjectFormPrint';
 import './ProjectPage.css';
 
 function ProjectPage() {
@@ -151,7 +152,7 @@ function ProjectPage() {
     setOcrError(null);
   };
 
-  const handleOcrProcess = (itemId) => {
+  const handleOcrProcess = () => {
     if (!selectedFile) {
       setOcrError('Please select an image file first.');
       return;
@@ -166,9 +167,15 @@ function ProjectPage() {
       // Extract numbers from OCR text
       const numbers = text.match(/\d+/g);
       if (numbers && numbers.length > 0) {
-        const numberStr = numbers[0];
-        setInputValues(prev => ({ ...prev, [itemId]: numberStr }));
-        setOcrResult(`OCR Result: ${numberStr}`);
+        // Map numbers to bomItems by index
+        const newInputValues = {};
+        project.bomItems.forEach((item, index) => {
+          if (numbers[index]) {
+            newInputValues[item.id] = numbers[index];
+          }
+        });
+        setInputValues(newInputValues);
+        setOcrResult('OCR processing completed and inputs updated.');
       } else {
         setOcrError('No numbers detected in the image.');
       }
@@ -178,6 +185,8 @@ function ProjectPage() {
       setOcrLoading(false);
     });
   };
+
+  const printRef = useRef();
 
   if (loading) return <div>Loading project...</div>;
   if (error) return <div>{error}</div>;
@@ -208,11 +217,41 @@ function ProjectPage() {
     return '';
   };
 
+  const handlePrint = () => {
+    const printContents = printRef.current.innerHTML;
+    const originalContents = document.body.innerHTML;
+
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
+  };
+
   return (
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
       <p>Nomor SPK: {project.projectCode}</p>
       <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
+
+      <button onClick={handlePrint} style={{ marginBottom: '20px' }}>
+        Print Project Form
+      </button>
+
+      <div style={{ display: 'none' }}>
+        <div ref={printRef}>
+          <ProjectFormPrint project={project} />
+        </div>
+      </div>
+
+      <div className="ocr-section">
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        <button onClick={handleOcrProcess} disabled={ocrLoading}>
+          {ocrLoading ? 'Processing OCR...' : 'Run OCR on Image'}
+        </button>
+        {ocrError && <div className="error-message">{ocrError}</div>}
+        {ocrResult && <div className="ocr-result">{ocrResult}</div>}
+      </div>
+
       {Object.keys(groupedItems).map((category) => (
         <div key={category} className="category-group">
           <h4 className="category-title">{category}</h4>
@@ -226,7 +265,6 @@ function ProjectPage() {
                 <th>T. QTY</th>
                 <th>SATUAN</th>
                 <th>KETERANGAN</th>
-                <th>OCR</th>
               </tr>
             </thead>
             <tbody>
@@ -262,17 +300,6 @@ function ProjectPage() {
                     </td>
                     <td>{item.satuan}</td>
                     <td>{item.keterangan}</td>
-                    <td>
-                      <input type="file" accept="image/*" onChange={handleFileChange} />
-                      <button
-                        onClick={() => handleOcrProcess(item.id)}
-                        disabled={ocrLoading || checked}
-                      >
-                        {ocrLoading ? 'Processing...' : 'Run OCR'}
-                      </button>
-                      {ocrError && <div className="error-message">{ocrError}</div>}
-                      {ocrResult && <div className="ocr-result">{ocrResult}</div>}
-                    </td>
                   </tr>
                 );
               })}
