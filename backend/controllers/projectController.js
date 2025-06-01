@@ -93,6 +93,19 @@ module.exports = {
       const bomItem = await BomItem.findOne({ where: { id: itemId, projectId } });
       if (!bomItem) return res.status(404).json({ error: 'BOM Item not found' });
       await bomItem.update(req.body);
+
+      // Calculate project progress based on checked bomItems
+      const bomItems = await BomItem.findAll({ where: { projectId } });
+      const totalItems = bomItems.length;
+      const checkedItems = bomItems.filter(item => item.checked).length;
+      const progress = totalItems > 0 ? checkedItems / totalItems : 0;
+
+      // Update project progress
+      const project = await Project.findByPk(projectId);
+      if (project) {
+        await project.update({ progress });
+      }
+
       res.json(bomItem);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -227,71 +240,6 @@ module.exports = {
       res.status(201).json(newBarangKeluar);
     } catch (error) {
       console.error('Error adding BarangKeluar:', error);
-      res.status(500).json({ error: error.message });
-    }
-  },
-
-  // New method to get barang keluar data, optionally filtered by projectId
-  async getBarangKeluar(req, res) {
-    try {
-      const { projectId } = req.params;
-      const { search } = req.query;
-      const { Op } = require('sequelize');
-      let whereClause = {};
-      let bomItemWhereClause = undefined;
-
-      if (projectId) {
-        // Find bomItems for the project
-        const bomItems = await BomItem.findAll({ where: { projectId } });
-        const bomItemIds = bomItems.map(item => item.id);
-        whereClause.bomItemId = bomItemIds.length > 0 ? bomItemIds : [-1]; // if no bomItems, no results
-      }
-
-      if (search) {
-        // Only filter by idBarang (kode barang)
-        bomItemWhereClause = {
-          idBarang: { [Op.like]: `%${search}%` },
-        };
-      }
-
-      const barangKeluar = await BarangKeluar.findAll({
-        where: whereClause,
-        include: [{
-          model: BomItem,
-          attributes: ['idBarang', 'projectId'],
-          where: bomItemWhereClause,
-          include: [{
-            model: Project,
-            attributes: ['projectName'],
-          }],
-        }],
-      });
-      // Map the result to include projectName at top level for convenience
-      const result = barangKeluar.map(item => {
-        const projectName = item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectName : null;
-        return {
-          ...item.toJSON(),
-          namaProjek: projectName,
-        };
-      });
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-
-  // New method to update keterangan of a BarangKeluar item
-  async updateBarangKeluarKeterangan(req, res) {
-    try {
-      const { id } = req.params;
-      const { keterangan } = req.body;
-      const barangKeluar = await BarangKeluar.findByPk(id);
-      if (!barangKeluar) {
-        return res.status(404).json({ error: 'BarangKeluar item not found' });
-      }
-      await barangKeluar.update({ keterangan });
-      res.json(barangKeluar);
-    } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },

@@ -12,8 +12,12 @@ function KeluarPage() {
   useEffect(() => {
     const fetchBarangKeluar = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/projects/1/barangkeluar`); // Removed search query to revert to previous working version
-        setBarangKeluar(res.data);
+        const response = await fetch('http://localhost:5000/api/barangkeluar');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setBarangKeluar(data);
       } catch (err) {
         setError('Failed to fetch barang keluar data');
       } finally {
@@ -82,14 +86,27 @@ function KeluarPage() {
 
   return (
     <div className="keluar-page">
-      <h2>Data Barang Keluar</h2>
-      <div className="search-container">
+      <h1>MASTER DATA(KELUAR)</h1>
+      <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"
           placeholder="Search by Kode Barang"
           value={search}
           onChange={handleSearchChange}
           className="search-input"
+          style={{ paddingLeft: '30px' }}
+        />
+        <i
+          className="fa fa-search"
+          style={{
+            position: 'absolute',
+            right: '10px',
+            top: '40%',
+            transform: 'translateY(-50%)',
+            color: '#888',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
         />
       </div>
       <table className="keluar-table">
