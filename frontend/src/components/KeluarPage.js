@@ -86,14 +86,27 @@ function KeluarPage() {
 
   return (
     <div className="keluar-page">
-      <h2>Data Barang Keluar</h2>
-      <div className="search-container">
+      <h1>MASTER DATA(KELUAR)</h1>
+      <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"
           placeholder="Search by Kode Barang"
           value={search}
           onChange={handleSearchChange}
           className="search-input"
+          style={{ paddingLeft: '30px' }}
+        />
+        <i
+          className="fa fa-search"
+          style={{
+            position: 'absolute',
+            right: '10px',
+            top: '40%',
+            transform: 'translateY(-50%)',
+            color: '#888',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
         />
       </div>
       <table className="keluar-table">

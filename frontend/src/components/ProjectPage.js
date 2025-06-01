@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import Tesseract from 'tesseract.js';
 import './ProjectPage.css';
 
 function ProjectPage() {
@@ -11,6 +12,12 @@ function ProjectPage() {
 
   const [keluarValues, setKeluarValues] = useState({});
   const [checkedStatus, setCheckedStatus] = useState({});
+
+  // OCR related states
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState(null);
+  const [ocrResult, setOcrResult] = useState('');
 
   // Fetch project data
   useEffect(() => {
@@ -137,6 +144,41 @@ function ProjectPage() {
     }
   };
 
+  // OCR handlers
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+    setOcrResult('');
+    setOcrError(null);
+  };
+
+  const handleOcrProcess = (itemId) => {
+    if (!selectedFile) {
+      setOcrError('Please select an image file first.');
+      return;
+    }
+    setOcrLoading(true);
+    setOcrError(null);
+    Tesseract.recognize(
+      selectedFile,
+      'eng',
+      { logger: m => console.log(m) }
+    ).then(({ data: { text } }) => {
+      // Extract numbers from OCR text
+      const numbers = text.match(/\d+/g);
+      if (numbers && numbers.length > 0) {
+        const numberStr = numbers[0];
+        setInputValues(prev => ({ ...prev, [itemId]: numberStr }));
+        setOcrResult(`OCR Result: ${numberStr}`);
+      } else {
+        setOcrError('No numbers detected in the image.');
+      }
+    }).catch((err) => {
+      setOcrError('OCR processing failed.');
+    }).finally(() => {
+      setOcrLoading(false);
+    });
+  };
+
   if (loading) return <div>Loading project...</div>;
   if (error) return <div>{error}</div>;
   if (!project) return <div>Project not found</div>;
@@ -170,8 +212,7 @@ function ProjectPage() {
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
       <p>Nomor SPK: {project.projectCode}</p>
-      <p>Progress: {project.progress}</p>
-      <h3>Items in this project:</h3>
+      <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
       {Object.keys(groupedItems).map((category) => (
         <div key={category} className="category-group">
           <h4 className="category-title">{category}</h4>
@@ -185,6 +226,7 @@ function ProjectPage() {
                 <th>T. QTY</th>
                 <th>SATUAN</th>
                 <th>KETERANGAN</th>
+                <th>OCR</th>
               </tr>
             </thead>
             <tbody>
@@ -220,6 +262,17 @@ function ProjectPage() {
                     </td>
                     <td>{item.satuan}</td>
                     <td>{item.keterangan}</td>
+                    <td>
+                      <input type="file" accept="image/*" onChange={handleFileChange} />
+                      <button
+                        onClick={() => handleOcrProcess(item.id)}
+                        disabled={ocrLoading || checked}
+                      >
+                        {ocrLoading ? 'Processing...' : 'Run OCR'}
+                      </button>
+                      {ocrError && <div className="error-message">{ocrError}</div>}
+                      {ocrResult && <div className="ocr-result">{ocrResult}</div>}
+                    </td>
                   </tr>
                 );
               })}

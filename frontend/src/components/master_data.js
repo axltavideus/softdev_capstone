@@ -15,6 +15,9 @@ const MasterData = () => {
     stokAwal: '',
   });
 
+  // Modal open state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // TODO: Replace with actual projectId or make dynamic
   const projectId = 1;
 
@@ -125,6 +128,7 @@ const MasterData = () => {
         throw new Error('Failed to add new master data');
       }
       setNewEntry({ idBarang: '', deskripsi: '', stokAwal: '' });
+      setIsModalOpen(false);
       fetchMasterData();
     } catch (error) {
       console.error('Error adding new master data:', error);
@@ -163,46 +167,77 @@ const MasterData = () => {
 
   return (
     <div className="master-data-container">
-      <h2>MASTER DATA</h2>
+      <h1>MASTER DATA</h1>
 
-      {/* New entry form */}
-      <div className="new-entry-form">
+      <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"
-          name="idBarang"
-          placeholder="Kode Barang"
-          value={newEntry.idBarang}
-          onChange={handleNewEntryChange}
-          className="new-entry-input"
+          placeholder="Masukkan Kode atau Deskripsi Barang"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="search-input"
+          style={{ paddingLeft: '30px' }}
         />
-        <input
-          type="text"
-          name="deskripsi"
-          placeholder="Deskripsi"
-          value={newEntry.deskripsi}
-          onChange={handleNewEntryChange}
-          className="new-entry-input"
+        <i
+          className="fa fa-search"
+          style={{
+            position: 'absolute',
+            left: '10px',
+            top: '40%',
+            transform: 'translateY(-50%)',
+            color: '#888',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
         />
-        <input
-          type="number"
-          name="stokAwal"
-          placeholder="Stok Awal"
-          value={newEntry.stokAwal}
-          onChange={handleNewEntryChange}
-          className="new-entry-input"
-        />
-        <button onClick={handleAddNewEntry} className="add-entry-button">
-          Add New
-        </button>
       </div>
 
-      <input
-        type="text"
-        placeholder="Masukkan Kode atau Deskripsi Barang"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="search-input"
-      />
+      {/* New entry form */}
+      <button className="open-modal-button" onClick={() => setIsModalOpen(true)}>
+        Tambahkan Barang
+      </button>
+
+      {/* Modal for new entry form */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>New Master Data Entry</h2>
+            <input
+              type="text"
+              name="idBarang"
+              placeholder="Kode Barang"
+              value={newEntry.idBarang}
+              onChange={handleNewEntryChange}
+              className="new-entry-input"
+            />
+            <input
+              type="text"
+              name="deskripsi"
+              placeholder="Deskripsi"
+              value={newEntry.deskripsi}
+              onChange={handleNewEntryChange}
+              className="new-entry-input"
+            />
+            <input
+              type="number"
+              name="stokAwal"
+              placeholder="Stok Awal"
+              value={newEntry.stokAwal}
+              onChange={handleNewEntryChange}
+              className="new-entry-input"
+            />
+            <div className="modal-buttons">
+              <button onClick={handleAddNewEntry} className="add-entry-button">
+                Add New
+              </button>
+              <button onClick={() => setIsModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table className="master-data-table">
         <thead>
           <tr>
@@ -222,37 +257,18 @@ const MasterData = () => {
                 <td>{item.idBarang}</td>
                 <td>{item.deskripsi}</td>
                 <td>
-                  {editStokAwal[item.id] ? (
-                    <input
-                      type="number"
-                      value={inputs.stokAwal || ''}
-                      onChange={(e) => handleInputChange(e, item.id, 'stokAwal')}
-                      className="input-cell"
-                    />
-                  ) : (
-                    <span>{inputs.stokAwal !== undefined ? inputs.stokAwal : item.stokAwal || '-'}</span>
-                  )}
-                  <button
-                    className="edit-button"
-                    onClick={() =>
-                      setEditStokAwal((prev) => ({
-                        ...prev,
-                        [item.id]: !prev[item.id],
-                      }))
-                    }
-                    title="Edit Stok Awal"
-                  >
-                    ✎
-                  </button>
-                  {editStokAwal[item.id] && (
-                    <button
-                      className="save-button"
-                      onClick={() => handleSaveStokAwal(item.id)}
-                      title="Save Stok Awal"
-                    >
-                      💾
-                    </button>
-                  )}
+                  <input
+                    type="number"
+                    value={inputs.stokAwal !== undefined ? inputs.stokAwal : item.stokAwal || ''}
+                    onChange={(e) => handleInputChange(e, item.id, 'stokAwal')}
+                    onBlur={() => handleSaveStokAwal(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.target.blur();
+                      }
+                    }}
+                    className="input-cell"
+                  />
                 </td>
                 <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td>
                 <td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td>
