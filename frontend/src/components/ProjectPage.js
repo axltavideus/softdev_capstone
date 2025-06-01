@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import Tesseract from 'tesseract.js';
+import ProjectFormPrint from './ProjectFormPrint';
 import './ProjectPage.css';
 
 function ProjectPage() {
@@ -11,6 +13,12 @@ function ProjectPage() {
 
   const [keluarValues, setKeluarValues] = useState({});
   const [checkedStatus, setCheckedStatus] = useState({});
+
+  // OCR related states
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState(null);
+  const [ocrResult, setOcrResult] = useState('');
 
   // Fetch project data
   useEffect(() => {
@@ -137,6 +145,49 @@ function ProjectPage() {
     }
   };
 
+  // OCR handlers
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+    setOcrResult('');
+    setOcrError(null);
+  };
+
+  const handleOcrProcess = () => {
+    if (!selectedFile) {
+      setOcrError('Please select an image file first.');
+      return;
+    }
+    setOcrLoading(true);
+    setOcrError(null);
+    Tesseract.recognize(
+      selectedFile,
+      'eng',
+      { logger: m => console.log(m) }
+    ).then(({ data: { text } }) => {
+      // Extract numbers from OCR text
+      const numbers = text.match(/\d+/g);
+      if (numbers && numbers.length > 0) {
+        // Map numbers to bomItems by index
+        const newInputValues = {};
+        project.bomItems.forEach((item, index) => {
+          if (numbers[index]) {
+            newInputValues[item.id] = numbers[index];
+          }
+        });
+        setInputValues(newInputValues);
+        setOcrResult('OCR processing completed and inputs updated.');
+      } else {
+        setOcrError('No numbers detected in the image.');
+      }
+    }).catch((err) => {
+      setOcrError('OCR processing failed.');
+    }).finally(() => {
+      setOcrLoading(false);
+    });
+  };
+
+  const printRef = useRef();
+
   if (loading) return <div>Loading project...</div>;
   if (error) return <div>{error}</div>;
   if (!project) return <div>Project not found</div>;
@@ -166,12 +217,41 @@ function ProjectPage() {
     return '';
   };
 
+  const handlePrint = () => {
+    const printContents = printRef.current.innerHTML;
+    const originalContents = document.body.innerHTML;
+
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
+  };
+
   return (
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
       <p>Nomor SPK: {project.projectCode}</p>
-      <p>Progress: {project.progress}</p>
-      <h3>Items in this project:</h3>
+      <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
+
+      <button onClick={handlePrint} style={{ marginBottom: '20px' }}>
+        Print Project Form
+      </button>
+
+      <div style={{ display: 'none' }}>
+        <div ref={printRef}>
+          <ProjectFormPrint project={project} />
+        </div>
+      </div>
+
+      <div className="ocr-section">
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        <button onClick={handleOcrProcess} disabled={ocrLoading}>
+          {ocrLoading ? 'Processing OCR...' : 'Run OCR on Image'}
+        </button>
+        {ocrError && <div className="error-message">{ocrError}</div>}
+        {ocrResult && <div className="ocr-result">{ocrResult}</div>}
+      </div>
+
       {Object.keys(groupedItems).map((category) => (
         <div key={category} className="category-group">
           <h4 className="category-title">{category}</h4>
