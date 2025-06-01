@@ -86,7 +86,7 @@ function KeluarPage() {
 
   return (
     <div className="keluar-page">
-      <h1>MASTER DATA(KELUAR)</h1>
+      <h1>MASTER DATA (KELUAR)</h1>
       <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"

@@ -37,6 +37,24 @@
   font-weight: 700;
 }
 
+.project-page .button-print {
+  background-color: #c86969;
+  border: transparent;
+  border-radius: 4px;
+  color: #6d1c1c;
+}
+
+.project-page .ocr-button {
+  background-color: #69C882;
+  border: transparent;
+  border-radius: 4px;
+  color: black ;
+  padding: 0px 10px;
+}
+
+.project-page .ocr-section {
+  margin-bottom: 20px;
+}
 /* Set fixed widths for columns */
 .project-page .project-table th:nth-child(1),
 .project-page .project-table td:nth-child(1) {
