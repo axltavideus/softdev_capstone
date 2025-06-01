@@ -1,6 +1,6 @@
 .masterdata-masuk-page {
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family:'Inter', sans-serif;
 }
 
 .search-container {
@@ -23,7 +23,7 @@
   cursor: pointer;
   font-size: 14px;
   border-radius: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .masuk-table {
