@@ -5,21 +5,16 @@ const MasterData = () => {
   const [bomItems, setBomItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inputValues, setInputValues] = useState({}); // store stok awal, masuk, keluar, stok akhir keyed by bomItem id
-  const [editStokAwal, setEditStokAwal] = useState({}); // track which rows have stokAwal input visible
-
-  // New state for new master data form
+  const [inputValues, setInputValues] = useState({});
+  const [activeEdit, setActiveEdit] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [newEntry, setNewEntry] = useState({
     idBarang: '',
     deskripsi: '',
     stokAwal: '',
   });
-
-  // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // TODO: Replace with actual projectId or make dynamic
-  const projectId = 1;
 
   useEffect(() => {
     fetchMasterData();
@@ -34,6 +29,17 @@ const MasterData = () => {
       const data = await response.json();
       setBomItems(data);
       setFilteredItems(data);
+      
+      const initialInputValues = {};
+      data.forEach(item => {
+        initialInputValues[item.id] = {
+          stokAwal: item.stokAwal || '',
+          masuk: item.masuk || '',
+          keluar: item.keluar || '',
+          stokAkhir: item.stockAkhir || ''
+        };
+      });
+      setInputValues(initialInputValues);
     } catch (error) {
       console.error('Error fetching master data:', error);
     }
@@ -66,6 +72,14 @@ const MasterData = () => {
     }));
   };
 
+  const handleStokAwalFocus = (itemId) => {
+    setActiveEdit(itemId);
+  };
+
+  const handleStokAwalBlur = (itemId) => {
+    setTimeout(() => setActiveEdit(null), 200);
+  };
+
   const handleSaveStokAwal = async (itemId) => {
     const inputs = inputValues[itemId];
     if (!inputs || inputs.stokAwal === undefined) return;
@@ -87,13 +101,10 @@ const MasterData = () => {
         throw new Error('Failed to update stokAwal');
       }
 
-      // Hide input field after save
-      setEditStokAwal((prev) => ({
-        ...prev,
-        [itemId]: false,
-      }));
-
-      // Refresh data
+      setSuccessMessage(`Stok Awal for ${itemToUpdate.idBarang} updated successfully!`);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setActiveEdit(null);
       fetchMasterData();
     } catch (error) {
       console.error('Error updating stokAwal:', error);
@@ -127,6 +138,10 @@ const MasterData = () => {
       if (!response.ok) {
         throw new Error('Failed to add new master data');
       }
+      
+      setSuccessMessage(`New item ${newEntry.idBarang} added successfully!`);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
       setNewEntry({ idBarang: '', deskripsi: '', stokAwal: '' });
       setIsModalOpen(false);
       fetchMasterData();
@@ -136,7 +151,6 @@ const MasterData = () => {
   };
 
   const handleDownload = () => {
-    // Prepare CSV content
     const headers = ['Kode Barang', 'Deskripsi', 'Stok Awal', 'Masuk', 'Keluar', 'Stock Akhir'];
     const rows = filteredItems.map((item) => {
       const inputs = inputValues[item.id] || {};
@@ -169,39 +183,34 @@ const MasterData = () => {
     <div className="master-data-container">
       <h1>MASTER DATA</h1>
 
-      <div className="search-container" style={{ position: 'relative' }}>
+      {showSuccess && (
+        <div className="success-popup">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <p>{successMessage}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="search-container">
         <input
           type="text"
           placeholder="Masukkan Kode atau Deskripsi Barang"
           value={searchTerm}
           onChange={handleSearchChange}
           className="search-input"
-          style={{ paddingLeft: '30px' }}
         />
-        <i
-          className="fa fa-search"
-          style={{
-            position: 'absolute',
-            left: '10px',
-            top: '40%',
-            transform: 'translateY(-50%)',
-            color: '#888',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        />
+        <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
 
-      {/* New entry form */}
       <button className="open-modal-button" onClick={() => setIsModalOpen(true)}>
         Tambahkan Barang
       </button>
 
-      {/* Modal for new entry form */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>New Master Data Entry</h2>
+            <h2>Tambahkan Master Data Baru</h2>
             <input
               type="text"
               name="idBarang"
@@ -257,18 +266,24 @@ const MasterData = () => {
                 <td>{item.idBarang}</td>
                 <td>{item.deskripsi}</td>
                 <td>
-                  <input
-                    type="number"
-                    value={inputs.stokAwal !== undefined ? inputs.stokAwal : item.stokAwal || ''}
-                    onChange={(e) => handleInputChange(e, item.id, 'stokAwal')}
-                    onBlur={() => handleSaveStokAwal(item.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.target.blur();
-                      }
-                    }}
-                    className="input-cell"
-                  />
+                  <div className="stok-awal-container">
+                    <input
+                      type="number"
+                      value={inputs.stokAwal}
+                      onChange={(e) => handleInputChange(e, item.id, 'stokAwal')}
+                      onFocus={() => handleStokAwalFocus(item.id)}
+                      onBlur={() => handleStokAwalBlur(item.id)}
+                      className="input-cell"
+                    />
+                    {activeEdit === item.id && (
+                      <button 
+                        onClick={() => handleSaveStokAwal(item.id)}
+                        className="confirm-button"
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td>
                 <td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td>
