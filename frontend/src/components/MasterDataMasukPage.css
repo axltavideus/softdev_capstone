@@ -4,12 +4,12 @@
 }
 
 .search-container {
-  margin-bottom: 15px;
+  margin-bottom: 1px;
 }
 
 .search-input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 6px 10px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -23,7 +23,7 @@
   cursor: pointer;
   font-size: 14px;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .masuk-table {
@@ -33,7 +33,6 @@
 
 .masuk-table th,
 .masuk-table td {
-  border: 1px solid #ddd;
   padding: 8px;
 }
 
@@ -42,9 +41,7 @@
   text-align: left;
 }
 
-.masuk-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+
 
 .masuk-table tr:hover {
   background-color: #e9e9e9;
@@ -97,3 +94,28 @@
   margin-top: 20px;
 }
 
+/* Set fixed widths for columns */
+.masterdata-masuk-page .masuk-table th:nth-child(1),
+.masterdata-masuk-page .masuk-table td:nth-child(1) {
+  width: 60px; /* TANGGAL */
+}
+
+.masterdata-masuk-page .masuk-table th:nth-child(2),
+.masterdata-masuk-page .masuk-table td:nth-child(2) {
+  width: 80px; /* KODE BARANG */
+}
+
+.masterdata-masuk-page .masuk-table th:nth-child(3),
+.masterdata-masuk-page .masuk-table td:nth-child(3) {
+  width: 350px; /* DESKRIPSI */
+}
+
+.masterdata-masuk-page .masuk-table th:nth-child(4),
+.masterdata-masuk-page .masuk-table td:nth-child(4) {
+  width: 80px; /* MASUK */
+}
+
+.masterdata-masuk-page .masuk-table th:nth-child(5),
+.masterdata-masuk-page .masuk-table td:nth-child(5) {
+  width: 140px; /* KET */
+}

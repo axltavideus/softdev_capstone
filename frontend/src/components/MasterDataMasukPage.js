@@ -100,7 +100,7 @@ function MasterDataMasukPage() {
 
   return (
     <div className="masterdata-masuk-page">
-      <h1>MASTER DATA(MASUK)</h1>
+      <h1>MASTER DATA (MASUK)</h1>
       <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"
@@ -200,10 +200,10 @@ function MasterDataMasukPage() {
         <tbody>
           {filteredData.map((item, index) => (
             <tr key={index}>
-              <td><b>{item.tanggal}</b></td>
-              <td><b>{item.kodeBarang}</b></td>
+              <td>{item.tanggal}</td>
+              <td>{item.kodeBarang}</td>
               <td>{item.deskripsi}</td>
-              <td><b>{item.masuk}</b></td>
+              <td>{item.masuk}</td>
               <td>{item.ket}</td>
             </tr>
           ))}
