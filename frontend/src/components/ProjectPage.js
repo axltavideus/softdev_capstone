@@ -328,8 +328,9 @@ function ProjectPage() {
       <p>Nomor SPK: {project.projectCode}</p>
       <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
 
-      {/* <button onClick={handlePrint} style={{ marginBottom: '20px' }}>
-        Print Project Form
+      {/* <button className="button-print"onClick={handlePrint} style={{ marginBottom: '20px' }}>
+        <i class="fa-solid fa-print"> </i> Print Project Form
+
       </button>
 
       <div style={{ display: 'none' }}>
@@ -340,8 +341,8 @@ function ProjectPage() {
 
       <div className="ocr-section">
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        <button onClick={handleOcrProcess} disabled={ocrLoading}>
-          {ocrLoading ? 'Processing OCR...' : 'Run OCR on Image'}
+        <button className="ocr-button"onClick={handleOcrProcess} disabled={ocrLoading}>
+         <i class="fa-solid fa-qrcode"></i> {ocrLoading ? 'Processing OCR...' : 'Scan Gambar'}
         </button>
         {ocrError && <div className="error-message">{ocrError}</div>}
         {ocrResult && <div className="ocr-result">{ocrResult}</div>}
