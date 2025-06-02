@@ -19,6 +19,7 @@ function ProjectPage() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState(null);
   const [ocrResult, setOcrResult] = useState('');
+  const [ocrTableData, setOcrTableData] = useState([]);
 
   // Fetch project data
   useEffect(() => {
@@ -152,39 +153,133 @@ function ProjectPage() {
     setOcrError(null);
   };
 
+  const preprocessImage = (file, callback) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(img, 0, 0);
+
+        // Convert to grayscale
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Apply adaptive thresholding (simple local threshold)
+        const width = canvas.width;
+        const height = canvas.height;
+        const newData = new Uint8ClampedArray(data.length);
+
+        // Helper to get pixel grayscale
+        const getGray = (x, y) => {
+          const i = (y * width + x) * 4;
+          return (data[i] + data[i + 1] + data[i + 2]) / 3;
+        };
+
+        // Compute local threshold for each pixel using 15x15 window
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            let sum = 0;
+            let count = 0;
+            for (let dy = -7; dy <= 7; dy++) {
+              for (let dx = -7; dx <= 7; dx++) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                  sum += getGray(nx, ny);
+                  count++;
+                }
+              }
+            }
+            const localThreshold = sum / count;
+            const i = (y * width + x) * 4;
+            const gray = getGray(x, y);
+            const val = gray > localThreshold ? 255 : 0;
+            newData[i] = newData[i + 1] = newData[i + 2] = val;
+            newData[i + 3] = 255;
+          }
+        }
+
+        for (let i = 0; i < data.length; i++) {
+          data[i] = newData[i];
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+
+        callback(canvas.toDataURL()); // base64 image
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleOcrProcess = () => {
     if (!selectedFile) {
       setOcrError('Please select an image file first.');
       return;
     }
+
     setOcrLoading(true);
     setOcrError(null);
-    Tesseract.recognize(
-      selectedFile,
-      'eng',
-      { logger: m => console.log(m) }
-    ).then(({ data: { text } }) => {
-      // Extract numbers from OCR text
-      const numbers = text.match(/\d+/g);
-      if (numbers && numbers.length > 0) {
-        // Map numbers to bomItems by index
-        const newInputValues = {};
-        project.bomItems.forEach((item, index) => {
-          if (numbers[index]) {
-            newInputValues[item.id] = numbers[index];
+
+    preprocessImage(selectedFile, (preprocessedImage) => {
+      Tesseract.recognize(
+        preprocessedImage,
+        'eng',
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+        console.log("=== OCR Lines ===");
+        lines.forEach(line => console.log(line));
+
+        // More flexible regex to extract itemId and quantity from each line
+        const extractedItems = [];
+        const itemIdRegex = /\b(\d{3,4})\b/;
+        const qtyRegex = /(\d+(\.\d+)?)(?!.*\d)/; // last number in line
+
+        lines.forEach(line => {
+          const itemIdMatch = line.match(itemIdRegex);
+          const qtyMatch = line.match(qtyRegex);
+
+          if (itemIdMatch && qtyMatch) {
+            const itemId = itemIdMatch[1];
+            const qtyToWrite = qtyMatch[1];
+
+            extractedItems.push({ itemId, qtyToWrite });
           }
         });
-        setInputValues(newInputValues);
-        setOcrResult('OCR processing completed and inputs updated.');
-      } else {
-        setOcrError('No numbers detected in the image.');
-      }
-    }).catch((err) => {
-      setOcrError('OCR processing failed.');
-    }).finally(() => {
-      setOcrLoading(false);
+
+        console.log("=== Extracted Items with Qty ===");
+        console.log(extractedItems);
+
+        const newInputValues = {};
+        extractedItems.forEach(({ itemId, qtyToWrite }) => {
+          const bomItem = project.bomItems.find(item => item.id === itemId);
+          if (bomItem) {
+            newInputValues[itemId] = qtyToWrite;
+          }
+        });
+
+        if (Object.keys(newInputValues).length > 0) {
+          setInputValues(newInputValues);
+          setOcrResult('OCR processing completed and inputs updated.');
+        } else {
+          setOcrError('Could not extract valid quantities.');
+        }
+      }).catch((err) => {
+        console.error(err);
+        setOcrError('OCR processing failed.');
+      }).finally(() => {
+        setOcrLoading(false);
+      });
     });
   };
+
 
   const printRef = useRef();
 
@@ -233,8 +328,9 @@ function ProjectPage() {
       <p>Nomor SPK: {project.projectCode}</p>
       <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
 
-      <button className="button-print"onClick={handlePrint} style={{ marginBottom: '20px' }}>
+      {/* <button className="button-print"onClick={handlePrint} style={{ marginBottom: '20px' }}>
         <i class="fa-solid fa-print"> </i> Print Project Form
+
       </button>
 
       <div style={{ display: 'none' }}>
@@ -250,7 +346,7 @@ function ProjectPage() {
         </button>
         {ocrError && <div className="error-message">{ocrError}</div>}
         {ocrResult && <div className="ocr-result">{ocrResult}</div>}
-      </div>
+      </div> */}
 
       {Object.keys(groupedItems).map((category) => (
         <div key={category} className="category-group">
@@ -307,6 +403,7 @@ function ProjectPage() {
           </table>
         </div>
       ))}
+
       <button onClick={handleSubmitAll} className="submit-all-button">Submit All</button>
       <Link to="/">Back to Projects</Link>
     </div>
