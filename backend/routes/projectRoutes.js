@@ -3,13 +3,14 @@ const router = express.Router();
 const projectController = require('../controllers/projectController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+const { authenticateUser, authorizeAdmin } = require('../middleware/authMiddleware');
 
 // Project routes
 router.get('/', projectController.getAllProjects);
 router.post('/', projectController.createProject);
 router.get('/:id', projectController.getProjectById);
 router.put('/:id', projectController.updateProject);
-router.delete('/:id', projectController.deleteProject);
+router.delete('/:id', authenticateUser, authorizeAdmin, projectController.deleteProject);
 
 // File upload route
 router.post('/upload', upload.single('file'), projectController.uploadExcelFile);
