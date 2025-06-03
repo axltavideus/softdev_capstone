@@ -50,7 +50,7 @@
   margin-bottom: 1.5rem;
 }
 
-.master-data-table {
+.master-data-keluar-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -60,7 +60,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.master-data-table th {
+.master-data-keluar-table th {
   background-color: #f2f2f2;
   color: #334155;
   font-weight: 600;
@@ -69,17 +69,17 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-.master-data-table td {
+.master-data-keluar-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
 }
 
-.master-data-table tr:last-child td {
+.master-data-keluar-table tr:last-child td {
   border-bottom: none;
 }
 
-.master-data-table tr:hover td {
+.master-data-keluar-table tr:hover td {
   background-color: #f8fafc;
 }
 
