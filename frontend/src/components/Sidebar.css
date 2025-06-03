@@ -75,11 +75,69 @@
 /* Responsive for smaller screens */
 @media (max-width: 600px) {
   .sidebar {
-    width: 100%;
-    height: auto;
-    box-shadow: none;
-    border-right: none;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 200px;
+    height: 100vh;
+    background-color: #d3d3d3;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    transition: left 0.3s ease;
+    z-index: 1000;
   }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: #d3d3d3;
+    border: none;
+    padding: 10px 15px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1100;
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  }
+
+  /* Add margin to main content when sidebar is open */
+  .sidebar.open ~ .main-content {
+    margin-left: 200px;
+    transition: margin-left 0.3s ease;
+  }
+
+  /* On small screens, reduce margin */
+  @media (max-width: 600px) {
+    .sidebar.open ~ .main-content {
+      margin-left: 0;
+    }
+  }
+
+  /* Sidebar toggle button adjustments */
+  .sidebar-toggle {
+    display: block;
+  }
+
+  @media (max-width: 600px) {
+    .sidebar-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: #d3d3d3;
+      border: none;
+      padding: 10px 15px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1100;
+      border-radius: 4px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    }
+  }
+
   .sidebar nav ul ul {
     padding-left: 10px;
   }
