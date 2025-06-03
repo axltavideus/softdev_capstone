@@ -1,6 +1,6 @@
 .master-data-container {
   padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   
@@ -50,7 +50,7 @@
   background-color: #4CAF50;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.45rem 1rem;
   font-size: 1rem;
   border-radius: 8px;
   cursor: pointer;
