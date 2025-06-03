@@ -5,7 +5,7 @@ import Tesseract from 'tesseract.js';
 import ProjectFormPrint from './ProjectFormPrint';
 import './ProjectPage.css';
 
-function ProjectPage() {
+function ProjectPage({ isAdmin }) {
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -327,6 +327,28 @@ function ProjectPage() {
       <h2>Project: {project.projectName}</h2>
       <p>Nomor SPK: {project.projectCode}</p>
       <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
+      {isAdmin && (
+        <button
+          onClick={async () => {
+            if (window.confirm('Are you sure you want to delete this project?')) {
+              try {
+                await axios.delete(`http://localhost:5000/api/projects/${id}`, {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  },
+                });
+                alert('Project deleted successfully.');
+                window.location.href = '/';
+              } catch (error) {
+                alert('Failed to delete project.');
+              }
+            }
+          }}
+          style={{ marginBottom: '20px', backgroundColor: 'red', color: 'white', padding: '8px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          Delete Project
+        </button>
+      )}
 
       {/* <button className="button-print"onClick={handlePrint} style={{ marginBottom: '20px' }}>
         <i class="fa-solid fa-print"> </i> Print Project Form

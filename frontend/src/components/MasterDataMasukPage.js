@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+
+import React, { useState, useEffect, useRef } from 'react';
 import './MasterDataMasukPage.css';
 
 function MasterDataMasukPage() {
@@ -16,7 +16,15 @@ function MasterDataMasukPage() {
     masuk: '',
     ket: '',
   });
+
+  const [masterData, setMasterData] = useState([]);
+  const [filteredMasterData, setFilteredMasterData] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const kodeBarangInputRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +49,22 @@ function MasterDataMasukPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/masterdata');
+        if (!response.ok) {
+          throw new Error('Failed to fetch master data');
+        }
+        const fetchedMasterData = await response.json();
+        setMasterData(fetchedMasterData);
+      } catch (error) {
+        alert('Error fetching master data: ' + error.message);
+      }
+    };
+    fetchMasterData();
+  }, []);
+
   const filteredData = data.filter(
     (item) =>
       item.kodeBarang.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,7 +73,36 @@ function MasterDataMasukPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEntry((prev) => ({ ...prev, [name]: value }));
+    if (name === 'kodeBarang') {
+      setNewEntry((prev) => ({ ...prev, kodeBarang: value }));
+      if (value.length > 0) {
+        const filtered = masterData.filter((item) =>
+          item.idBarang && item.idBarang.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredMasterData(filtered);
+        setShowDropdown(true);
+      } else {
+        setShowDropdown(false);
+      }
+      // Clear deskripsi if kodeBarang is manually changed
+      setNewEntry((prev) => ({ ...prev, deskripsi: '' }));
+    } else {
+      setNewEntry((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSelectItem = (item) => {
+    console.log('handleSelectItem called with item:', item);
+    setNewEntry((prev) => ({
+      ...prev,
+      kodeBarang: item.idBarang,
+      deskripsi: item.deskripsi,
+    }));
+    // Hide dropdown immediately after item selection
+    setShowDropdown(false);
+    if (kodeBarangInputRef.current) {
+      kodeBarangInputRef.current.focus();
+    }
   };
 
   const handleKetChange = (index, value) => {
@@ -92,8 +145,7 @@ function MasterDataMasukPage() {
     if (
       !newEntry.tanggal ||
       !newEntry.kodeBarang ||
-      !newEntry.deskripsi ||
-      !newEntry.ket
+      !newEntry.deskripsi
     ) {
       alert('Please fill in all fields');
       return;
@@ -193,34 +245,62 @@ function MasterDataMasukPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Tambah Data Masuk</h2>
             <input
-              type="text"
+              type="date"
               name="tanggal"
               placeholder="Tanggal (DD/MM/YYYY)"
-              value={newEntry.tanggal}
+              value={newEntry.tanggal || ''}
               onChange={handleInputChange}
               className="new-entry-input"
             />
+            <div style={{ position: 'relative' }}>
             <input
               type="text"
               name="kodeBarang"
               placeholder="Kode Barang"
-              value={newEntry.kodeBarang}
+              value={newEntry.kodeBarang || ''}
               onChange={handleInputChange}
               className="new-entry-input"
+              autoComplete="off"
+              ref={kodeBarangInputRef}
+              onFocus={() => {
+              if (newEntry && newEntry.kodeBarang && newEntry.kodeBarang.length > 0) {
+                const filtered = masterData.filter((item) =>
+                  item.idBarang && item.idBarang.toLowerCase().includes(newEntry.kodeBarang.toLowerCase())
+                );
+                setFilteredMasterData(filtered);
+                setShowDropdown(true);
+              }
+              }}
+              style={{ display: 'block' }}
             />
+              {showDropdown && filteredMasterData.length > 0 && (
+                <ul className="autocomplete-dropdown">
+                  {filteredMasterData.map((item, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleSelectItem(item)}
+                      className="autocomplete-item"
+                    >
+                      {item.idBarang} - {item.deskripsi}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <input
               type="text"
               name="deskripsi"
               placeholder="Deskripsi"
-              value={newEntry.deskripsi}
+              value={newEntry.deskripsi || ''}
               onChange={handleInputChange}
               className="new-entry-input"
+              readOnly
             />
             <input
               type="number"
               name="masuk"
               placeholder="Masuk"
-              value={newEntry.masuk}
+              value={newEntry.masuk || ''}
               onChange={handleInputChange}
               className="new-entry-input"
               min="0"
@@ -229,7 +309,7 @@ function MasterDataMasukPage() {
               type="text"
               name="ket"
               placeholder="Keterangan"
-              value={newEntry.ket}
+              value={newEntry.ket || ''}
               onChange={handleInputChange}
               className="new-entry-input"
             />
