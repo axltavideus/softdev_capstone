@@ -147,7 +147,7 @@ function KeluarPage() {
         <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
       <div className="table-container">
-        <table className="master-data-table">
+        <table className="master-data-keluar-table">
           <thead>
             <tr>
               <th>Tanggal</th>
