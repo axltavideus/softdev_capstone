@@ -278,7 +278,7 @@
 
 .master-data-table th:nth-child(3),
 .master-data-table td:nth-child(3) {
-  width: 40%;
+  width: 20%;
 }
 
 .master-data-table th:nth-child(4),
