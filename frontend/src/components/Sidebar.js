@@ -13,8 +13,6 @@ function Sidebar({ handleLogout }) {
             <ul>
               <li><Link to="/keluar" className="sidebar-button">Keluar</Link></li>
               <li><Link to="/masuk" className="sidebar-button">Masuk</Link></li>
-              <li><Link to="/login" className="sidebar-button">Login</Link></li>
-              <li><Link to="/signup" className="sidebar-button">Signup</Link></li>
             </ul>
           </li>
         </ul>
