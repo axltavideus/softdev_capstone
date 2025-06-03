@@ -146,65 +146,67 @@ function KeluarPage() {
         />
         <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
-      <table className="keluar-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>KELUAR</th>
-            <th>KET</th>
-            <th>Project</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredBarangKeluar.map((item) => (
-            <tr key={item.id}>
-              <td>{item.tanggal}</td>
-              <td>{item.BomItem ? item.BomItem.idBarang : '-'}</td>
-              <td>{item.deskripsi}</td>
-              <td>{item.keluar}</td>
-              <td>
-                <div className={`keterangan-container ${expandedKeterangan === item.id ? 'expanded' : ''}`}>
-                  {expandedKeterangan === item.id ? (
-                    <>
-                      <textarea
-                        value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
-                        onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
-                        className="keterangan-textarea"
-                        autoFocus
-                      />
-                      <div className="keterangan-actions">
-                        <button
-                          onClick={() => handleSaveKeterangan(item.id)}
-                          className="confirm-button"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => handleCancelEdit(item.id)}
-                          className="cancel-button"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <div 
-                      className="keterangan-preview"
-                      onClick={() => handleKeteranganFocus(item.id)}
-                      onBlur={() => handleKeteranganBlur(item.id)}
-                    >
-                      {item.keterangan || <span className="empty-keterangan">Click to add keterangan</span>}
-                    </div>
-                  )}
-                </div>
-              </td>
-              <td>{item.namaProjek}</td>
+      <div className="table-container">
+        <table className="master-data-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>KODE BARANG</th>
+              <th>DESKRIPSI</th>
+              <th>KELUAR</th>
+              <th>KET</th>
+              <th>Project</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredBarangKeluar.map((item) => (
+              <tr key={item.id}>
+                <td>{item.tanggal}</td>
+                <td>{item.BomItem ? item.BomItem.idBarang : '-'}</td>
+                <td>{item.deskripsi}</td>
+                <td>{item.keluar}</td>
+                <td>
+                  <div className={`keterangan-container ${expandedKeterangan === item.id ? 'expanded' : ''}`}>
+                    {expandedKeterangan === item.id ? (
+                      <>
+                        <textarea
+                          value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
+                          onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
+                          className="keterangan-textarea"
+                          autoFocus
+                        />
+                        <div className="keterangan-actions">
+                          <button
+                            onClick={() => handleSaveKeterangan(item.id)}
+                            className="confirm-button"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => handleCancelEdit(item.id)}
+                            className="cancel-button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div 
+                        className="keterangan-preview"
+                        onClick={() => handleKeteranganFocus(item.id)}
+                        onBlur={() => handleKeteranganBlur(item.id)}
+                      >
+                        {item.keterangan || <span className="empty-keterangan">Click to add keterangan</span>}
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td>{item.namaProjek}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <button className="download-button" onClick={handleDownload}>
         DOWNLOAD
       </button>
