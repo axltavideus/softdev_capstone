@@ -6,6 +6,12 @@
   
 }
 
+.keterangan-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .keluar-page h1 {
   color: #1e293b;
   font-size: 2rem;

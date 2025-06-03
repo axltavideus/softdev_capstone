@@ -30,7 +30,7 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        <Sidebar handleLogout={handleLogout} />
+        {isAuthenticated && <Sidebar handleLogout={handleLogout} />}
         <main className="main-content">
           <Routes>
             <Route
