@@ -16,6 +16,8 @@ function MasterDataMasukPage() {
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,6 +95,9 @@ function MasterDataMasukPage() {
         ket: '',
       });
       setIsModalOpen(false);
+      setSuccessMessage('Data masuk added successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       alert('Error saving data: ' + error.message);
     }
@@ -101,6 +106,14 @@ function MasterDataMasukPage() {
   return (
     <div className="masterdata-masuk-page">
       <h1>MASTER DATA (MASUK)</h1>
+      {showSuccess && (
+        <div className="success-popup">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <p>{successMessage}</p>
+          </div>
+        </div>
+      )}
       <div className="search-container" style={{ position: 'relative' }}>
         <input
           type="text"
@@ -108,18 +121,9 @@ function MasterDataMasukPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
-          style={{ paddingLeft: '30px' }}
         />
         <i
-          className="fa fa-search"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '40%',
-            transform: 'translateY(-50%)',
-            color: '#888',
-            pointerEvents: 'none',
-          }}
+          className="fa fa-search search-icon"
           aria-hidden="true"
         />
       </div>
@@ -140,7 +144,7 @@ function MasterDataMasukPage() {
               placeholder="Tanggal (DD/MM/YYYY)"
               value={newEntry.tanggal}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
             <input
               type="text"
@@ -148,7 +152,7 @@ function MasterDataMasukPage() {
               placeholder="Kode Barang"
               value={newEntry.kodeBarang}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
             <input
               type="text"
@@ -156,7 +160,7 @@ function MasterDataMasukPage() {
               placeholder="Deskripsi"
               value={newEntry.deskripsi}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
             <input
               type="number"
@@ -164,7 +168,7 @@ function MasterDataMasukPage() {
               placeholder="Masuk"
               value={newEntry.masuk}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
               min="0"
             />
             <input
@@ -173,7 +177,7 @@ function MasterDataMasukPage() {
               placeholder="Keterangan"
               value={newEntry.ket}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
             <div className="modal-buttons">
               <button onClick={handleAddEntry} className="add-entry-button">

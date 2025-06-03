@@ -8,6 +8,8 @@ function KeluarPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [editingKeterangan, setEditingKeterangan] = useState({});
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchBarangKeluar = async () => {
@@ -46,6 +48,9 @@ function KeluarPage() {
             item.id === id ? { ...item, keterangan: editingKeterangan[id] } : item
           )
         );
+        setSuccessMessage('Keterangan updated successfully!');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
       } catch (err) {
         console.error('Failed to update keterangan', err);
       }
@@ -87,27 +92,23 @@ function KeluarPage() {
   return (
     <div className="keluar-page">
       <h1>MASTER DATA (KELUAR)</h1>
-      <div className="search-container" style={{ position: 'relative' }}>
+      {showSuccess && (
+        <div className="success-popup">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <p>{successMessage}</p>
+          </div>
+        </div>
+      )}
+      <div className="search-container">
         <input
           type="text"
           placeholder="Search by Kode Barang"
           value={search}
           onChange={handleSearchChange}
           className="search-input"
-          style={{ paddingLeft: '30px' }}
         />
-        <i
-          className="fa fa-search"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '40%',
-            transform: 'translateY(-50%)',
-            color: '#888',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        />
+        <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
       <table className="keluar-table">
         <thead>
@@ -138,7 +139,7 @@ function KeluarPage() {
                       e.target.blur();
                     }
                   }}
-                  className="keterangan-input"
+                  className="input-cell"
                 />
               </td>
               <td>{item.namaProjek}</td>
@@ -146,7 +147,9 @@ function KeluarPage() {
           ))}
         </tbody>
       </table>
-      <button className="download-button" onClick={handleDownload}>Download CSV</button>
+      <button className="download-button" onClick={handleDownload}>
+        DOWNLOAD
+      </button>
     </div>
   );
 }
