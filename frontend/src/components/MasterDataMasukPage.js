@@ -1,11 +1,14 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import './MasterDataMasukPage.css';
 
-const initialData = [];
-
 function MasterDataMasukPage() {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingKet, setEditingKet] = useState({});
+  const [activeEdit, setActiveEdit] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [newEntry, setNewEntry] = useState({
     tanggal: '',
     kodeBarang: '',
@@ -20,8 +23,6 @@ function MasterDataMasukPage() {
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const kodeBarangInputRef = useRef(null);
 
@@ -39,6 +40,7 @@ function MasterDataMasukPage() {
           deskripsi: item.deskripsi,
           masuk: item.masuk,
           ket: item.keterangan,
+          id: item.id
         })));
       } catch (error) {
         alert('Error fetching data: ' + error.message);
@@ -103,6 +105,42 @@ function MasterDataMasukPage() {
     }
   };
 
+  const handleKetChange = (index, value) => {
+    setEditingKet(prev => ({ ...prev, [index]: value }));
+  };
+
+  const handleKetFocus = (index) => {
+    setActiveEdit(index);
+  };
+
+  const handleKetBlur = async (index) => {
+    if (editingKet[index] !== undefined) {
+      await handleSaveKet(index);
+    }
+    setActiveEdit(null);
+  };
+
+  const handleSaveKet = async (index) => {
+    if (editingKet[index] !== undefined) {
+      try {
+        const item = filteredData[index];
+        await axios.put(`http://localhost:5000/api/barangmasuk/${item.id}/keterangan`, {
+          keterangan: editingKet[index],
+        });
+        setData(prev =>
+          prev.map((d, i) =>
+            i === index ? { ...d, ket: editingKet[index] } : d
+          )
+        );
+        setSuccessMessage('Keterangan updated successfully!');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } catch (err) {
+        console.error('Failed to update keterangan', err);
+      }
+    }
+  };
+
   const handleAddEntry = async () => {
     if (
       !newEntry.tanggal ||
@@ -153,8 +191,31 @@ function MasterDataMasukPage() {
     }
   };
 
+  const handleDownload = () => {
+    const headers = ['Tanggal', 'Kode Barang', 'Deskripsi', 'Masuk', 'Keterangan'];
+    const rows = filteredData.map(item => [
+      item.tanggal,
+      item.kodeBarang,
+      item.deskripsi,
+      item.masuk,
+      item.ket || '-',
+    ]);
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent += headers.join(',') + '\r\n';
+    rows.forEach(row => {
+      csvContent += row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',') + '\r\n';
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'master_data_masuk.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="masterdata-masuk-page">
+    <div className="master-data-container">
       <h1>MASTER DATA (MASUK)</h1>
       {showSuccess && (
         <div className="success-popup">
@@ -164,7 +225,7 @@ function MasterDataMasukPage() {
           </div>
         </div>
       )}
-      <div className="search-container" style={{ position: 'relative' }}>
+      <div className="search-container">
         <input
           type="text"
           placeholder="Masukkan Kode atau Deskripsi Barang"
@@ -172,18 +233,13 @@ function MasterDataMasukPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
-        <i
-          className="fa fa-search search-icon"
-          aria-hidden="true"
-        />
+        <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
 
-      {/* Button to open modal */}
       <button className="open-modal-button" onClick={() => setIsModalOpen(true)}>
         Tambahkan Barang
       </button>
 
-      {/* Modal for add entry form */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -269,28 +325,59 @@ function MasterDataMasukPage() {
         </div>
       )}
 
-      <table className="masuk-table">
-        <thead>
-          <tr>
-            <th>TANGGAL</th>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>MASUK</th>
-            <th>KET</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((item, index) => (
-            <tr key={index}>
-              <td>{item.tanggal}</td>
-              <td>{item.kodeBarang}</td>
-              <td>{item.deskripsi}</td>
-              <td>{item.masuk}</td>
-              <td>{item.ket}</td>
+      <div className="table-container">
+        <table className="master-data-table">
+          <thead>
+            <tr>
+              <th>TANGGAL</th>
+              <th>KODE BARANG</th>
+              <th>DESKRIPSI</th>
+              <th>MASUK</th>
+              <th>KETERANGAN</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.tanggal}</td>
+                <td>{item.kodeBarang}</td>
+                <td>{item.deskripsi}</td>
+                <td>{item.masuk}</td>
+                <td>
+                  <div className="ket-container">
+                    <input
+                      type="text"
+                      value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
+                      onChange={(e) => handleKetChange(index, e.target.value)}
+                      onFocus={() => handleKetFocus(index)}
+                      onBlur={() => handleKetBlur(index)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.target.blur();
+                        }
+                      }}
+                      className="input-cell"
+                    />
+                    {activeEdit === index && (
+                      <button
+                        onClick={() => handleSaveKet(index)}
+                        className="confirm-button"
+                        aria-label="Save Keterangan"
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      <button className="download-button" onClick={handleDownload}>
+        DOWNLOAD
+      </button>
     </div>
   );
 }
