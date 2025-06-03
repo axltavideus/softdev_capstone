@@ -8,6 +8,7 @@ function KeluarPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [editingKeterangan, setEditingKeterangan] = useState({});
+  const [activeEdit, setActiveEdit] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -37,7 +38,18 @@ function KeluarPage() {
     setEditingKeterangan(prev => ({ ...prev, [id]: value }));
   };
 
+  const handleKeteranganFocus = (id) => {
+    setActiveEdit(id);
+  };
+
   const handleKeteranganBlur = async (id) => {
+    if (editingKeterangan[id] !== undefined) {
+      await handleSaveKeterangan(id);
+    }
+    setActiveEdit(null);
+  };
+
+  const handleSaveKeterangan = async (id) => {
     if (editingKeterangan[id] !== undefined) {
       try {
         await axios.put(`http://localhost:5000/api/barangkeluar/${id}/keterangan`, {
@@ -129,18 +141,30 @@ function KeluarPage() {
               <td>{item.deskripsi}</td>
               <td>{item.keluar}</td>
               <td>
-                <input
-                  type="text"
-                  value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
-                  onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
-                  onBlur={() => handleKeteranganBlur(item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.target.blur();
-                    }
-                  }}
-                  className="input-cell"
-                />
+                <div className="keterangan-container">
+                  <input
+                    type="text"
+                    value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
+                    onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
+                    onFocus={() => handleKeteranganFocus(item.id)}
+                    onBlur={() => handleKeteranganBlur(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.target.blur();
+                      }
+                    }}
+                    className="input-cell"
+                  />
+                  {activeEdit === item.id && (
+                    <button
+                      onClick={() => handleSaveKeterangan(item.id)}
+                      className="confirm-button"
+                      aria-label="Save Keterangan"
+                    >
+                      ✓
+                    </button>
+                  )}
+                </div>
               </td>
               <td>{item.namaProjek}</td>
             </tr>
