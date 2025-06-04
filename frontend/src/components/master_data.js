@@ -22,7 +22,7 @@ const MasterData = () => {
 
   const fetchMasterData = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/masterdata`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/masterdata`);
       if (!response.ok) {
         throw new Error('Failed to fetch master data');
       }
@@ -88,7 +88,7 @@ const MasterData = () => {
       const itemToUpdate = filteredItems.find((item) => item.id === itemId);
       if (!itemToUpdate) return;
 
-      const response = await fetch(`http://localhost:5000/api/masterdata/${itemId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/masterdata/${itemId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +126,7 @@ const MasterData = () => {
       return;
     }
     try {
-      const response = await fetch('http://localhost:5000/api/masterdata', {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/masterdata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

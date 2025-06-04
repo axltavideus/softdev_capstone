@@ -10,6 +10,8 @@ import MasterData from './components/master_data';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [isAdmin, setIsAdmin] = useState(false);
@@ -22,7 +24,7 @@ function App() {
         return;
       }
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/me', {
+        const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

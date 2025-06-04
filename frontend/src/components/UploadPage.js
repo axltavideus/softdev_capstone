@@ -13,7 +13,7 @@ function UploadPage() {
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/projects');
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects`);
       setProjects(res.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -31,7 +31,7 @@ function UploadPage() {
     formData.append('file', file);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/projects/upload', formData, {
+      const res = await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

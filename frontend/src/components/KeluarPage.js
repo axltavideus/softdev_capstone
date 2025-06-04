@@ -16,7 +16,7 @@ function KeluarPage() {
   useEffect(() => {
     const fetchBarangKeluar = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/barangkeluar');
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/barangkeluar`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -59,7 +59,7 @@ function KeluarPage() {
 
   const handleSaveKeterangan = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/barangkeluar/${id}/keterangan`, {
+      await axios.put(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/barangkeluar/${id}/keterangan`, {
         keterangan: editingKeterangan[id],
       });
       setBarangKeluar(prev =>

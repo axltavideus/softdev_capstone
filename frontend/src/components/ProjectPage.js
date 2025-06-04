@@ -25,7 +25,7 @@ function ProjectPage({ isAdmin }) {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/projects/${id}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${id}`);
         setProject(res.data);
 
         // Initialize checkedStatus from bomItems
@@ -75,7 +75,7 @@ function ProjectPage({ isAdmin }) {
     setCheckedStatus(prev => ({ ...prev, [itemId]: newChecked }));
 
     try {
-      await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+      await axios.put(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${id}/bomitems/${itemId}`, {
         checked: newChecked,
       });
     } catch (error) {
@@ -111,7 +111,7 @@ function ProjectPage({ isAdmin }) {
       // Allow input above max, so no error here
 
       try {
-        await axios.post(`http://localhost:5000/api/projects/${project.id}/bomitems/${itemId}/keluar`, {
+        await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${project.id}/bomitems/${itemId}/keluar`, {
           tanggal: today,
           deskripsi,
           keluar: keluarValue,
@@ -125,12 +125,12 @@ function ProjectPage({ isAdmin }) {
 
         // Auto update checked status based on newTotalKeluar and totalQty
         if (newTotalKeluar === totalQty) {
-          await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+          await axios.put(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${id}/bomitems/${itemId}`, {
             checked: true,
           });
           setCheckedStatus(prev => ({ ...prev, [itemId]: true }));
         } else if (newTotalKeluar > totalQty) {
-          await axios.put(`http://localhost:5000/api/projects/${id}/bomitems/${itemId}`, {
+          await axios.put(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${id}/bomitems/${itemId}`, {
             checked: false,
           });
           setCheckedStatus(prev => ({ ...prev, [itemId]: false }));
@@ -332,7 +332,7 @@ function ProjectPage({ isAdmin }) {
           onClick={async () => {
             if (window.confirm('Are you sure you want to delete this project?')) {
               try {
-                await axios.delete(`http://localhost:5000/api/projects/${id}`, {
+                await axios.delete(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'}/api/projects/${id}`, {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                   },
