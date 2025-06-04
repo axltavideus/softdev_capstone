@@ -54,7 +54,7 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {isAuthenticated && <Sidebar handleLogout={handleLogout} />}
+        {isAuthenticated && <Sidebar handleLogout={handleLogout} isAdmin={isAdmin} />}
         <main className="main-content">
           <Routes>
             <Route
@@ -66,13 +66,22 @@ function App() {
               element={isAuthenticated ? <Navigate to="/" /> : <SignupPage onSignup={handleSignup} />}
             />
             <Route
-              path="/"
-              element={isAuthenticated ? <UploadPage onLogout={handleLogout} /> : <Navigate to="/login" />}
+            path="/"
+            element={isAuthenticated ? <UploadPage onLogout={handleLogout} isAdmin={isAdmin} /> : <Navigate to="/login" />}
             />
             <Route path="/project/:id" element={<ProjectPage isAdmin={isAdmin} />} />
-            <Route path="/keluar" element={<KeluarPage />} />
-            <Route path="/masuk" element={<MasterDataMasukPage />} />
-            <Route path="/master_data" element={<MasterData />} />
+            <Route
+              path="/keluar"
+              element={isAdmin ? <KeluarPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/masuk"
+              element={isAdmin ? <MasterDataMasukPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/master_data"
+              element={isAdmin ? <MasterData /> : <Navigate to="/" />}
+            />
           </Routes>
         </main>
       </div>

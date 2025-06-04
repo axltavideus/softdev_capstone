@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './UploadPage.css';
 
-function UploadPage() {
+function UploadPage({ isAdmin }) {
   const [file, setFile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [sortConfig, setSortConfig] = useState(null);
@@ -76,17 +76,21 @@ function UploadPage() {
 
   return (
     <div className="upload-page">
-      <h2>Upload File Bill Of Material</h2>
-      <label htmlFor="fileInput">Nama File</label>
-      <input
-        id="fileInput"
-        type="file"
-        accept=".xlsx,.csv"
-        onChange={handleFileChange}
-      />
-      <button onClick={handleUpload} disabled={!file}>
-        Upload
-      </button>
+      {isAdmin && (
+        <>
+          <h2>Upload File Bill Of Material</h2>
+          <label htmlFor="fileInput">Nama File</label>
+          <input
+            id="fileInput"
+            type="file"
+            accept=".xlsx,.csv"
+            onChange={handleFileChange}
+          />
+          <button onClick={handleUpload} disabled={!file}>
+            Upload
+          </button>
+        </>
+      )}
 
       <h2>Daftar Projek</h2>
       <table className="project-table">
