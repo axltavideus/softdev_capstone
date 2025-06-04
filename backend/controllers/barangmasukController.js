@@ -1,4 +1,4 @@
-const { BarangMasuk } = require('../models');
+const { BarangMasuk, MasterData } = require('../models'); // <-- Import MasterData
 
 const createBarangMasuk = async (req, res) => {
   try {
@@ -6,6 +6,13 @@ const createBarangMasuk = async (req, res) => {
     if (!tanggal || !kodeBarang || !deskripsi || masuk === undefined) {
       return res.status(400).json({ message: 'Tanggal, Kode Barang, Deskripsi, dan Masuk wajib diisi' });
     }
+
+    // Check if kodeBarang exists in MasterData
+    const masterItem = await MasterData.findOne({ where: { idBarang: kodeBarang } });
+    if (!masterItem) {
+      return res.status(400).json({ message: 'Kode Barang tidak ditemukan di Master Data!' });
+    }
+
     const newEntry = await BarangMasuk.create({
       tanggal,
       kodeBarang,
@@ -30,21 +37,40 @@ const getAllBarangMasuk = async (req, res) => {
   }
 };
 
+const updateBarangMasuk = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tanggal, kodeBarang, deskripsi, masuk, keterangan } = req.body;
+    const barangMasuk = await BarangMasuk.findByPk(id);
+    if (!barangMasuk) {
+      return res.status(404).json({ message: 'BarangMasuk not found' });
+    }
+    await barangMasuk.update({ tanggal, kodeBarang, deskripsi, masuk, keterangan });
+    return res.json(barangMasuk);
+  } catch (error) {
+    console.error('Error updating BarangMasuk:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 const deleteBarangMasuk = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await BarangMasuk.destroy({ where: { id } });
-    if (!deleted) {
-      return res.status(404).json({ message: 'Data masuk not found' });
+    const barangMasuk = await BarangMasuk.findByPk(id);
+    if (!barangMasuk) {
+      return res.status(404).json({ message: 'BarangMasuk not found' });
     }
-    res.json({ message: 'Data masuk deleted successfully' });
+    await barangMasuk.destroy();
+    return res.json({ message: 'BarangMasuk deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting BarangMasuk:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 module.exports = {
   createBarangMasuk,
   getAllBarangMasuk,
+  updateBarangMasuk,
   deleteBarangMasuk,
 };

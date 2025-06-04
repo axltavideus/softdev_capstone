@@ -23,6 +23,8 @@ function MasterDataMasukPage() {
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -288,6 +290,49 @@ function MasterDataMasukPage() {
     document.body.removeChild(link);
   };
 
+  const [activeEditRow, setActiveEditRow] = useState(null);
+  const [editingRowData, setEditingRowData] = useState({});
+
+  const handleEditRow = (index) => {
+    setActiveEditRow(index);
+    setEditingRowData({ ...sortedData[index] });
+  };
+
+  const handleSaveRow = async (index) => {
+    try {
+      const item = sortedData[index];
+      const response = await fetch(`http://localhost:5000/api/barangmasuk/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingRowData),
+      });
+      if (!response.ok) throw new Error('Failed to update data');
+      setSuccessMessage('Data masuk updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setActiveEditRow(null);
+      setEditingRowData({});
+      // Refresh data
+      const res = await fetch('http://localhost:5000/api/barangmasuk');
+      setData(await res.json());
+    } catch (error) {
+      alert('Failed to update data: ' + error.message);
+    }
+  };
+
+  const handleCancelEditRow = () => {
+    setActiveEditRow(null);
+    setEditingRowData({});
+  };
+
+  const handleEditRowChange = (e) => {
+    const { name, value } = e.target;
+    setEditingRowData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <div className="master-data-container">
       <h1>MASTER DATA (MASUK)</h1>
@@ -422,9 +467,33 @@ function MasterDataMasukPage() {
         <tbody>
           {sortedData.map((item, index) => (
             <tr key={index}>
-              <td>{item.tanggal}</td>
+              <td>
+                {activeEditRow === index ? (
+                  <input
+                    type="date"
+                    name="tanggal"
+                    value={editingRowData.tanggal}
+                    onChange={handleEditRowChange}
+                    className="input-cell"
+                  />
+                ) : (
+                  item.tanggal
+                )}
+              </td>
               <td>{item.kodeBarang}</td>
-              <td>{item.deskripsi}</td>
+              <td>
+                {activeEditRow === index ? (
+                  <input
+                    type="text"
+                    name="deskripsi"
+                    value={editingRowData.deskripsi}
+                    onChange={handleEditRowChange}
+                    className="input-cell"
+                  />
+                ) : (
+                  item.deskripsi
+                )}
+              </td>
               <td>{item.masuk}</td>
               <td>
                 <div className="keterangan-container">
@@ -454,13 +523,31 @@ function MasterDataMasukPage() {
               </td>
               {isAdmin && (
                 <td>
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDelete(item.id)}
-                    aria-label="Delete"
-                  >
-                    Hapus
-                  </button>
+                  <div className="aksi-buttons">
+                    {activeEditRow === index ? (
+                      <>
+                        <button className="confirm-button" onClick={() => handleSaveRow(index)}>Save</button>
+                        <button className="cancel-button" onClick={handleCancelEditRow}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="edit-button"
+                          onClick={() => handleEditRow(index)}
+                          aria-label="Edit"
+                        >
+                          <i className="fa-solid fa-pen"></i>
+                        </button>
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(item.id)}
+                          aria-label="Delete"
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               )}
             </tr>
@@ -472,6 +559,81 @@ function MasterDataMasukPage() {
       <button className="download-button" onClick={handleDownload}>
         DOWNLOAD
       </button>
+
+      {editModalOpen && editItem && (
+        <div className="modal-overlay" onClick={() => setEditModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2>Edit Data Masuk</h2>
+            <input
+              type="date"
+              name="tanggal"
+              value={editItem.tanggal}
+              onChange={e => setEditItem(prev => ({ ...prev, tanggal: e.target.value }))}
+              className="new-entry-input"
+            />
+            <input
+              type="text"
+              name="kodeBarang"
+              value={editItem.kodeBarang}
+              onChange={e => setEditItem(prev => ({ ...prev, kodeBarang: e.target.value }))}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="text"
+              name="deskripsi"
+              value={editItem.deskripsi}
+              onChange={e => setEditItem(prev => ({ ...prev, deskripsi: e.target.value }))}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="number"
+              name="masuk"
+              value={editItem.masuk}
+              onChange={e => setEditItem(prev => ({ ...prev, masuk: e.target.value }))}
+              className="new-entry-input"
+            />
+            <input
+              type="text"
+              name="keterangan"
+              value={editItem.keterangan || ''}
+              onChange={e => setEditItem(prev => ({ ...prev, keterangan: e.target.value }))}
+              className="new-entry-input"
+            />
+            <div className="modal-buttons">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`http://localhost:5000/api/barangmasuk/${editItem.id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editItem),
+                    });
+                    if (!response.ok) throw new Error('Failed to update data');
+                    setSuccessMessage('Data masuk updated successfully!');
+                    setShowSuccess(true);
+                    setTimeout(() => setShowSuccess(false), 3000);
+                    setEditModalOpen(false);
+                    setEditItem(null);
+                    // Refresh data
+                    const res = await fetch('http://localhost:5000/api/barangmasuk');
+                    setData(await res.json());
+                  } catch (error) {
+                    alert('Failed to update data: ' + error.message);
+                  }
+                }}
+                className="add-entry-button"
+              >
+                Save
+              </button>
+              <button onClick={() => setEditModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

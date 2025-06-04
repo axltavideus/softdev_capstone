@@ -16,6 +16,8 @@ const MasterData = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   const handleSort = (key) => {
     let direction = 'ascending';
@@ -232,6 +234,38 @@ const MasterData = () => {
     }
   };
 
+  const handleEditClick = (item) => {
+    setEditItem({ ...item });
+    setEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditItem((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/masterdata/${editItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editItem),
+      });
+      if (!response.ok) throw new Error('Failed to update item');
+      setSuccessMessage('Item updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setEditModalOpen(false);
+      setEditItem(null);
+      fetchMasterData();
+    } catch (error) {
+      alert('Failed to update item: ' + error.message);
+    }
+  };
+
   return (
     <div className="master-data-container">
       <h1>MASTER DATA</h1>
@@ -300,6 +334,47 @@ const MasterData = () => {
         </div>
       )}
 
+      {editModalOpen && editItem && (
+        <div className="modal-overlay" onClick={() => setEditModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Master Data</h2>
+            <input
+              type="text"
+              name="idBarang"
+              placeholder="Kode Barang"
+              value={editItem.idBarang}
+              onChange={handleEditChange}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="text"
+              name="deskripsi"
+              placeholder="Deskripsi"
+              value={editItem.deskripsi}
+              onChange={handleEditChange}
+              className="new-entry-input"
+            />
+            <input
+              type="number"
+              name="stokAwal"
+              placeholder="Stok Awal"
+              value={editItem.stokAwal}
+              onChange={handleEditChange}
+              className="new-entry-input"
+            />
+            <div className="modal-buttons">
+              <button onClick={handleEditSave} className="add-entry-button">
+                Save Changes
+              </button>
+              <button onClick={() => setEditModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table className="master-data-table">
         <thead>
           <tr>
@@ -360,7 +435,14 @@ const MasterData = () => {
                     onClick={() => handleDelete(item.id)}
                     aria-label="Delete"
                   >
-                    Hapus
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                  <button
+                    className="edit-button"
+                    onClick={() => handleEditClick(item)}
+                    aria-label="Edit"
+                  >
+                    <i class="fa-solid fa-pencil"></i>
                   </button>
                 </td>
               </tr>

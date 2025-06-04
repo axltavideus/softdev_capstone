@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { createBarangMasuk, getAllBarangMasuk, deleteBarangMasuk } = require('../controllers/barangmasukController');
-const { authenticateUser, authorizeAdmin } = require('../middleware/authMiddleware');
+const { createBarangMasuk, getAllBarangMasuk, updateBarangMasuk, deleteBarangMasuk } = require('../controllers/barangmasukController');
 
 router.post('/', createBarangMasuk);
 router.get('/', getAllBarangMasuk);
-router.delete('/:id', authenticateUser, authorizeAdmin, deleteBarangMasuk);
+router.put('/:id', updateBarangMasuk);
+router.delete('/:id', deleteBarangMasuk);
 
 module.exports = router;

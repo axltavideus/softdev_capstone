@@ -13,6 +13,8 @@ function KeluarPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [expandedKeterangan, setExpandedKeterangan] = useState(null);
   const [sortConfig, setSortConfig] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
     const fetchBarangKeluar = async () => {
@@ -174,6 +176,40 @@ function KeluarPage() {
     }
   };
 
+  const handleEditClick = (item) => {
+    setEditItem({ ...item });
+    setEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditItem((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/barangkeluar/${editItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editItem),
+      });
+      if (!response.ok) throw new Error('Failed to update item');
+      setSuccessMessage('Barang keluar updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setEditModalOpen(false);
+      setEditItem(null);
+      // Refresh data
+      const res = await fetch('http://localhost:5000/api/barangkeluar');
+      setBarangKeluar(await res.json());
+    } catch (error) {
+      alert('Failed to update barang keluar: ' + error.message);
+    }
+  };
+
   if (loading) return <div>Loading barang keluar data...</div>;
   if (error) return <div>{error}</div>;
 
@@ -272,13 +308,22 @@ function KeluarPage() {
                 </td>
                 <td>{item.namaProjek}</td>
                 <td>
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDelete(item.id)}
-                    aria-label="Delete"
-                  >
-                    Hapus
-                  </button>
+                  <div className="aksi-buttons">
+                    <button
+                      className="edit-button"
+                      onClick={() => handleEditClick(item)}
+                      aria-label="Edit"
+                    >
+                      <i className="fa-solid fa-pen"></i>
+                    </button>
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDelete(item.id)}
+                      aria-label="Delete"
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -288,6 +333,82 @@ function KeluarPage() {
       <button className="download-button" onClick={handleDownload}>
         DOWNLOAD
       </button>
+      {editModalOpen && editItem && (
+        <div className="edit-modal">
+          <div className="edit-modal-content">
+            <span className="close" onClick={() => setEditModalOpen(false)}>&times;</span>
+            <h2>Edit Barang Keluar</h2>
+            <div className="edit-form-group">
+              <label>Tanggal</label>
+              <input
+                type="date"
+                name="tanggal"
+                value={editItem.tanggal.split('T')[0]}
+                onChange={handleEditChange}
+                className="edit-input"
+              />
+            </div>
+            <div className="edit-form-group">
+              <label>Kode Barang</label>
+              <input
+                type="text"
+                name="idBarang"
+                value={editItem.BomItem ? editItem.BomItem.idBarang : ''}
+                onChange={handleEditChange}
+                className="edit-input"
+                disabled
+              />
+            </div>
+            <div className="edit-form-group">
+              <label>Deskripsi</label>
+              <input
+                type="text"
+                name="deskripsi"
+                value={editItem.deskripsi}
+                onChange={handleEditChange}
+                className="edit-input"
+              />
+            </div>
+            <div className="edit-form-group">
+              <label>Keluar</label>
+              <input
+                type="number"
+                name="keluar"
+                value={editItem.keluar}
+                onChange={handleEditChange}
+                className="edit-input"
+              />
+            </div>
+            <div className="edit-form-group">
+              <label>Keterangan</label>
+              <textarea
+                name="keterangan"
+                value={editItem.keterangan}
+                onChange={handleEditChange}
+                className="edit-textarea"
+              />
+            </div>
+            <div className="edit-form-group">
+              <label>Project</label>
+              <input
+                type="text"
+                name="namaProjek"
+                value={editItem.namaProjek}
+                onChange={handleEditChange}
+                className="edit-input"
+              />
+            </div>
+            <div className="edit-actions">
+              <button onClick={handleEditSave} className="save-button">
+                Save Changes
+              </button>
+              <button onClick={() => setEditModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

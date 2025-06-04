@@ -346,3 +346,28 @@
   transform: translateY(-2px) scale(1.05);
 }
 
+.aksi-buttons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.edit-button {
+  color: #1976d2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 1.1em;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.edit-button:hover {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
