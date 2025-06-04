@@ -70,7 +70,7 @@ function App() {
               path="/"
               element={isAuthenticated ? <UploadPage onLogout={handleLogout} isAdmin={isAdmin} /> : <Navigate to="/login" />}
             />
-            <Route path="/project/:id" element={<ProjectPage isAdmin={isAdmin} />} />
+            <Route path="/project/:id" element={isAuthenticated ? <ProjectPage isAdmin={isAdmin} /> : <Navigate to="/login" />} />
             <Route
               path="/keluar"
               element={isAdmin ? <KeluarPage /> : <Navigate to="/" />}
