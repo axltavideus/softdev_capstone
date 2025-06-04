@@ -52,26 +52,34 @@ function Sidebar({ handleLogout, isAdmin }) {
                 </li>
                 
                 {isAdmin && (
-                  <li className="menu-section">
-                    <Link to="/master_data" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                      <span className="icon">📊</span>
-                      <span className="text">Master Data</span>
-                    </Link>
-                    <ul className="submenu">
-                      <li>
-                        <Link to="/keluar" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                          <span className="icon">↩️</span>
-                          <span className="text">Keluar</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/masuk" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                          <span className="icon">↪️</span>
-                          <span className="text">Masuk</span>
-                        </Link>
-                      </li>
-                    </ul>
-                  </li>
+                  <>
+                    <li className="menu-section">
+                      <Link to="/master_data" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                        <span className="icon">📊</span>
+                        <span className="text">Master Data</span>
+                      </Link>
+                      <ul className="submenu">
+                        <li>
+                          <Link to="/keluar" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                            <span className="icon">↩️</span>
+                            <span className="text">Keluar</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/masuk" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                            <span className="icon">↪️</span>
+                            <span className="text">Masuk</span>
+                          </Link>
+                        </li>
+                      </ul>
+                    </li>
+                    <li>
+                      <Link to="/users" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                        <span className="icon">👥</span>
+                        <span className="text">User Management</span>
+                      </Link>
+                    </li>
+                  </>
                 )}
               </ul>
             </nav>

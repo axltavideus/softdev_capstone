@@ -6,6 +6,7 @@ const projectRoutes = require('./routes/projectRoutes');
 const barangmasukRoutes = require('./routes/barangmasukRoutes');
 const testRoutes = require('./routes/testRoutes');
 const barangkeluarRoutes = require('./routes/barangkeluarRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const path = require('path');
 
@@ -23,6 +24,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/barangmasuk', barangmasukRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/barangkeluar', barangkeluarRoutes);
+app.use('/api/users', userRoutes);
 
 const masterDataRoutes = require('./routes/masterDataRoutes');
 app.use('/api/masterdata', masterDataRoutes);

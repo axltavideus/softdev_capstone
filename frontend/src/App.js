@@ -9,6 +9,7 @@ import MasterDataMasukPage from './components/MasterDataMasukPage';
 import MasterData from './components/master_data';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import UserManagementPage from './components/UserManagementPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -66,8 +67,8 @@ function App() {
               element={isAuthenticated ? <Navigate to="/" /> : <SignupPage onSignup={handleSignup} />}
             />
             <Route
-            path="/"
-            element={isAuthenticated ? <UploadPage onLogout={handleLogout} isAdmin={isAdmin} /> : <Navigate to="/login" />}
+              path="/"
+              element={isAuthenticated ? <UploadPage onLogout={handleLogout} isAdmin={isAdmin} /> : <Navigate to="/login" />}
             />
             <Route path="/project/:id" element={<ProjectPage isAdmin={isAdmin} />} />
             <Route
@@ -81,6 +82,10 @@ function App() {
             <Route
               path="/master_data"
               element={isAdmin ? <MasterData /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/users"
+              element={isAdmin ? <UserManagementPage /> : <Navigate to="/" />}
             />
           </Routes>
         </main>
