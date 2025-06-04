@@ -1,76 +1,344 @@
 .keluar-page {
-  padding: 20px;
+  padding: 1rem;
   font-family: 'Inter', sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
-.keluar-page h2 {
-  margin-bottom: 20px;
-  color: #333;
+.keluar-page h1 {
+  color: #1e293b;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .search-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+  position: relative;
+  margin-bottom: 1.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .search-input {
-  padding: 6px 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 250px;
-}
-
-.keterangan-input {
   width: 100%;
-  padding: 4px 6px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
-.keluar-table {
+.search-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.table-container {
+  margin-bottom: 1.5rem;
+}
+
+.master-data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.keluar-table th,
-.keluar-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.keluar-table th {
+.master-data-table th {
   background-color: #f2f2f2;
-  color: #555;
+  color: #334155;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.keluar-table tr:nth-child(even) {
-  background-color: #fafafa;
+.master-data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
 }
 
-.keluar-table tr:hover {
-  background-color: #f1f1f1;
+.master-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.master-data-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Keterangan styles */
+.keterangan-preview {
+  padding: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: pre-wrap;
+  max-width: 150px;
+  max-height: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.keterangan-preview:hover {
+  border-color: #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.empty-keterangan {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.keterangan-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  resize: vertical;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.keterangan-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Expanded keterangan container */
+.keterangan-container.expanded {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.keterangan-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.confirm-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.confirm-button:hover {
+  background-color: #3e8e41;
+}
+
+.cancel-button {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #e2e8f0;
 }
 
 .download-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #4CAF50; /* bright green */
+  background-color: #3b82f6;
   color: white;
   border: none;
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
 }
 
 .download-button:hover {
-  background-color: #45a049;
+  background-color: #2563eb;
+}
+
+.success-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
+}
+
+.success-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.success-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .keluar-page h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem 0.5rem 2rem;
+  }
+
+  .keluar-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+
+  .keluar-table thead,
+  .keluar-table tbody,
+  .keluar-table th,
+  .keluar-table td,
+  .keluar-table tr {
+    display: block;
+  }
+
+  .keluar-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .keluar-table tr {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ddd;
+  }
+
+  .keluar-table td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 50%;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .keluar-table td:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    padding-left: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    content: attr(data-label);
+  }
+
+  .keterangan-container.expanded {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    padding: 1rem;
+  }
+
+  .keterangan-textarea {
+    min-height: 150px;
+  }
+
+  .download-button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .keluar-page h1 {
+    font-size: 1.25rem;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem 0.4rem 1.8rem;
+  }
+
+  .download-button {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
 }

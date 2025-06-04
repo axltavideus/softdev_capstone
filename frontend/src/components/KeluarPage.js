@@ -8,6 +8,10 @@ function KeluarPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [editingKeterangan, setEditingKeterangan] = useState({});
+  const [activeEdit, setActiveEdit] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [expandedKeterangan, setExpandedKeterangan] = useState(null);
 
   useEffect(() => {
     const fetchBarangKeluar = async () => {
@@ -35,21 +39,52 @@ function KeluarPage() {
     setEditingKeterangan(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleKeteranganBlur = async (id) => {
-    if (editingKeterangan[id] !== undefined) {
-      try {
-        await axios.put(`http://localhost:5000/api/barangkeluar/${id}/keterangan`, {
-          keterangan: editingKeterangan[id],
-        });
-        setBarangKeluar(prev =>
-          prev.map(item =>
-            item.id === id ? { ...item, keterangan: editingKeterangan[id] } : item
-          )
-        );
-      } catch (err) {
-        console.error('Failed to update keterangan', err);
-      }
+  const handleKeteranganFocus = (id) => {
+    setActiveEdit(id);
+    setExpandedKeterangan(id);
+    if (editingKeterangan[id] === undefined) {
+      const item = barangKeluar.find(item => item.id === id);
+      setEditingKeterangan(prev => ({ ...prev, [id]: item.keterangan || '' }));
     }
+  };
+
+  const handleKeteranganBlur = (id) => {
+    if (!expandedKeterangan) {
+      if (editingKeterangan[id] !== undefined) {
+        handleSaveKeterangan(id);
+      }
+      setActiveEdit(null);
+    }
+  };
+
+  const handleSaveKeterangan = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/barangkeluar/${id}/keterangan`, {
+        keterangan: editingKeterangan[id],
+      });
+      setBarangKeluar(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, keterangan: editingKeterangan[id] } : item
+        )
+      );
+      setSuccessMessage('Keterangan updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setActiveEdit(null);
+      setExpandedKeterangan(null);
+    } catch (err) {
+      console.error('Failed to update keterangan', err);
+    }
+  };
+
+  const handleCancelEdit = (id) => {
+    setActiveEdit(null);
+    setExpandedKeterangan(null);
+    setEditingKeterangan(prev => {
+      const newState = {...prev};
+      delete newState[id];
+      return newState;
+    });
   };
 
   const handleDownload = () => {
@@ -87,66 +122,94 @@ function KeluarPage() {
   return (
     <div className="keluar-page">
       <h1>MASTER DATA (KELUAR)</h1>
-      <div className="search-container" style={{ position: 'relative' }}>
+      {showSuccess && (
+        <div className="success-popup">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <p>{successMessage}</p>
+          </div>
+        </div>
+      )}
+      {expandedKeterangan && (
+        <div 
+          className="keterangan-backdrop" 
+          onClick={() => handleCancelEdit(expandedKeterangan)}
+        />
+      )}
+      <div className="search-container">
         <input
           type="text"
           placeholder="Search by Kode Barang"
           value={search}
           onChange={handleSearchChange}
           className="search-input"
-          style={{ paddingLeft: '30px' }}
         />
-        <i
-          className="fa fa-search"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '40%',
-            transform: 'translateY(-50%)',
-            color: '#888',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        />
+        <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
-      <table className="keluar-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>KELUAR</th>
-            <th>KET</th>
-            <th>Project</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredBarangKeluar.map((item) => (
-            <tr key={item.id}>
-              <td>{item.tanggal}</td>
-              <td>{item.BomItem ? item.BomItem.idBarang : '-'}</td>
-              <td>{item.deskripsi}</td>
-              <td>{item.keluar}</td>
-              <td>
-                <input
-                  type="text"
-                  value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
-                  onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
-                  onBlur={() => handleKeteranganBlur(item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.target.blur();
-                    }
-                  }}
-                  className="keterangan-input"
-                />
-              </td>
-              <td>{item.namaProjek}</td>
+      <div className="table-container">
+        <table className="master-data-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>KODE BARANG</th>
+              <th>DESKRIPSI</th>
+              <th>KELUAR</th>
+              <th>KET</th>
+              <th>Project</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button className="download-button" onClick={handleDownload}>Download CSV</button>
+          </thead>
+          <tbody>
+            {filteredBarangKeluar.map((item) => (
+              <tr key={item.id}>
+                <td>{item.tanggal}</td>
+                <td>{item.BomItem ? item.BomItem.idBarang : '-'}</td>
+                <td>{item.deskripsi}</td>
+                <td>{item.keluar}</td>
+                <td>
+                  <div className={`keterangan-container ${expandedKeterangan === item.id ? 'expanded' : ''}`}>
+                    {expandedKeterangan === item.id ? (
+                      <>
+                        <textarea
+                          value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
+                          onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
+                          className="keterangan-textarea"
+                          autoFocus
+                        />
+                        <div className="keterangan-actions">
+                          <button
+                            onClick={() => handleSaveKeterangan(item.id)}
+                            className="confirm-button"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => handleCancelEdit(item.id)}
+                            className="cancel-button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div 
+                        className="keterangan-preview"
+                        onClick={() => handleKeteranganFocus(item.id)}
+                        onBlur={() => handleKeteranganBlur(item.id)}
+                      >
+                        {item.keterangan || <span className="empty-keterangan">Click to add keterangan</span>}
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td>{item.namaProjek}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button className="download-button" onClick={handleDownload}>
+        DOWNLOAD
+      </button>
     </div>
   );
 }

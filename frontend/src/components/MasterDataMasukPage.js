@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import './MasterDataMasukPage.css';
 
-const initialData = [];
-
 function MasterDataMasukPage() {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingKet, setEditingKet] = useState({});
+  const [activeEdit, setActiveEdit] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [newEntry, setNewEntry] = useState({
     tanggal: '',
     kodeBarang: '',
@@ -14,8 +17,14 @@ function MasterDataMasukPage() {
     ket: '',
   });
 
+  const [masterData, setMasterData] = useState([]);
+  const [filteredMasterData, setFilteredMasterData] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const kodeBarangInputRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,12 +40,29 @@ function MasterDataMasukPage() {
           deskripsi: item.deskripsi,
           masuk: item.masuk,
           ket: item.keterangan,
+          id: item.id
         })));
       } catch (error) {
         alert('Error fetching data: ' + error.message);
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/masterdata');
+        if (!response.ok) {
+          throw new Error('Failed to fetch master data');
+        }
+        const fetchedMasterData = await response.json();
+        setMasterData(fetchedMasterData);
+      } catch (error) {
+        alert('Error fetching master data: ' + error.message);
+      }
+    };
+    fetchMasterData();
   }, []);
 
   const filteredData = data.filter(
@@ -47,15 +73,79 @@ function MasterDataMasukPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEntry((prev) => ({ ...prev, [name]: value }));
+    if (name === 'kodeBarang') {
+      setNewEntry((prev) => ({ ...prev, kodeBarang: value }));
+      if (value.length > 0) {
+        const filtered = masterData.filter((item) =>
+          item.idBarang && item.idBarang.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredMasterData(filtered);
+        setShowDropdown(true);
+      } else {
+        setShowDropdown(false);
+      }
+      // Clear deskripsi if kodeBarang is manually changed
+      setNewEntry((prev) => ({ ...prev, deskripsi: '' }));
+    } else {
+      setNewEntry((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSelectItem = (item) => {
+    console.log('handleSelectItem called with item:', item);
+    setNewEntry((prev) => ({
+      ...prev,
+      kodeBarang: item.idBarang,
+      deskripsi: item.deskripsi,
+    }));
+    // Hide dropdown immediately after item selection
+    setShowDropdown(false);
+    if (kodeBarangInputRef.current) {
+      kodeBarangInputRef.current.focus();
+    }
+  };
+
+  const handleKetChange = (index, value) => {
+    setEditingKet(prev => ({ ...prev, [index]: value }));
+  };
+
+  const handleKetFocus = (index) => {
+    setActiveEdit(index);
+  };
+
+  const handleKetBlur = async (index) => {
+    if (editingKet[index] !== undefined) {
+      await handleSaveKet(index);
+    }
+    setActiveEdit(null);
+  };
+
+  const handleSaveKet = async (index) => {
+    if (editingKet[index] !== undefined) {
+      try {
+        const item = filteredData[index];
+        await axios.put(`http://localhost:5000/api/barangmasuk/${item.id}/keterangan`, {
+          keterangan: editingKet[index],
+        });
+        setData(prev =>
+          prev.map((d, i) =>
+            i === index ? { ...d, ket: editingKet[index] } : d
+          )
+        );
+        setSuccessMessage('Keterangan updated successfully!');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } catch (err) {
+        console.error('Failed to update keterangan', err);
+      }
+    }
   };
 
   const handleAddEntry = async () => {
     if (
       !newEntry.tanggal ||
       !newEntry.kodeBarang ||
-      !newEntry.deskripsi ||
-      !newEntry.ket
+      !newEntry.deskripsi
     ) {
       alert('Please fill in all fields');
       return;
@@ -93,87 +183,135 @@ function MasterDataMasukPage() {
         ket: '',
       });
       setIsModalOpen(false);
+      setSuccessMessage('Data masuk added successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       alert('Error saving data: ' + error.message);
     }
   };
 
+  const handleDownload = () => {
+    const headers = ['Tanggal', 'Kode Barang', 'Deskripsi', 'Masuk', 'Keterangan'];
+    const rows = filteredData.map(item => [
+      item.tanggal,
+      item.kodeBarang,
+      item.deskripsi,
+      item.masuk,
+      item.ket || '-',
+    ]);
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent += headers.join(',') + '\r\n';
+    rows.forEach(row => {
+      csvContent += row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',') + '\r\n';
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'master_data_masuk.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="masterdata-masuk-page">
+    <div className="master-data-container">
       <h1>MASTER DATA (MASUK)</h1>
-      <div className="search-container" style={{ position: 'relative' }}>
+      {showSuccess && (
+        <div className="success-popup">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <p>{successMessage}</p>
+          </div>
+        </div>
+      )}
+      <div className="search-container">
         <input
           type="text"
           placeholder="Masukkan Kode atau Deskripsi Barang"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
-          style={{ paddingLeft: '30px' }}
         />
-        <i
-          className="fa fa-search"
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '40%',
-            transform: 'translateY(-50%)',
-            color: '#888',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        />
+        <i className="fa fa-search search-icon" aria-hidden="true" />
       </div>
 
-      {/* Button to open modal */}
       <button className="open-modal-button" onClick={() => setIsModalOpen(true)}>
         Tambahkan Barang
       </button>
 
-      {/* Modal for add entry form */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Tambah Data Masuk</h2>
             <input
-              type="text"
+              type="date"
               name="tanggal"
               placeholder="Tanggal (DD/MM/YYYY)"
-              value={newEntry.tanggal}
+              value={newEntry.tanggal || ''}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
+            <div style={{ position: 'relative' }}>
             <input
               type="text"
               name="kodeBarang"
               placeholder="Kode Barang"
-              value={newEntry.kodeBarang}
+              value={newEntry.kodeBarang || ''}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
+              autoComplete="off"
+              ref={kodeBarangInputRef}
+              onFocus={() => {
+              if (newEntry && newEntry.kodeBarang && newEntry.kodeBarang.length > 0) {
+                const filtered = masterData.filter((item) =>
+                  item.idBarang && item.idBarang.toLowerCase().includes(newEntry.kodeBarang.toLowerCase())
+                );
+                setFilteredMasterData(filtered);
+                setShowDropdown(true);
+              }
+              }}
+              style={{ display: 'block' }}
             />
+              {showDropdown && filteredMasterData.length > 0 && (
+                <ul className="autocomplete-dropdown">
+                  {filteredMasterData.map((item, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleSelectItem(item)}
+                      className="autocomplete-item"
+                    >
+                      {item.idBarang} - {item.deskripsi}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <input
               type="text"
               name="deskripsi"
               placeholder="Deskripsi"
-              value={newEntry.deskripsi}
+              value={newEntry.deskripsi || ''}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
+              readOnly
             />
             <input
               type="number"
               name="masuk"
               placeholder="Masuk"
-              value={newEntry.masuk}
+              value={newEntry.masuk || ''}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
               min="0"
             />
             <input
               type="text"
               name="ket"
               placeholder="Keterangan"
-              value={newEntry.ket}
+              value={newEntry.ket || ''}
               onChange={handleInputChange}
-              className="form-input"
+              className="new-entry-input"
             />
             <div className="modal-buttons">
               <button onClick={handleAddEntry} className="add-entry-button">
@@ -187,28 +325,59 @@ function MasterDataMasukPage() {
         </div>
       )}
 
-      <table className="masuk-table">
-        <thead>
-          <tr>
-            <th>TANGGAL</th>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>MASUK</th>
-            <th>KET</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((item, index) => (
-            <tr key={index}>
-              <td>{item.tanggal}</td>
-              <td>{item.kodeBarang}</td>
-              <td>{item.deskripsi}</td>
-              <td>{item.masuk}</td>
-              <td>{item.ket}</td>
+      <div className="table-container">
+        <table className="master-data-table">
+          <thead>
+            <tr>
+              <th>TANGGAL</th>
+              <th>KODE BARANG</th>
+              <th>DESKRIPSI</th>
+              <th>MASUK</th>
+              <th>KETERANGAN</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.tanggal}</td>
+                <td>{item.kodeBarang}</td>
+                <td>{item.deskripsi}</td>
+                <td>{item.masuk}</td>
+                <td>
+                  <div className="ket-container">
+                    <input
+                      type="text"
+                      value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
+                      onChange={(e) => handleKetChange(index, e.target.value)}
+                      onFocus={() => handleKetFocus(index)}
+                      onBlur={() => handleKetBlur(index)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.target.blur();
+                        }
+                      }}
+                      className="input-cell"
+                    />
+                    {activeEdit === index && (
+                      <button
+                        onClick={() => handleSaveKet(index)}
+                        className="confirm-button"
+                        aria-label="Save Keterangan"
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      <button className="download-button" onClick={handleDownload}>
+        DOWNLOAD
+      </button>
     </div>
   );
 }
