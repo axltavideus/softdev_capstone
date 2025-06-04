@@ -12,6 +12,7 @@ function KeluarPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [expandedKeterangan, setExpandedKeterangan] = useState(null);
+  const [sortConfig, setSortConfig] = useState(null);
 
   useEffect(() => {
     const fetchBarangKeluar = async () => {
@@ -49,12 +50,11 @@ function KeluarPage() {
   };
 
   const handleKeteranganBlur = (id) => {
-    if (!expandedKeterangan) {
-      if (editingKeterangan[id] !== undefined) {
-        handleSaveKeterangan(id);
-      }
-      setActiveEdit(null);
+    if (editingKeterangan[id] !== undefined) {
+      handleSaveKeterangan(id);
     }
+    setActiveEdit(null);
+    setExpandedKeterangan(null);
   };
 
   const handleSaveKeterangan = async (id) => {
@@ -111,13 +111,47 @@ function KeluarPage() {
     document.body.removeChild(link);
   };
 
-  if (loading) return <div>Loading barang keluar data...</div>;
-  if (error) return <div>{error}</div>;
-
   const filteredBarangKeluar = barangKeluar.filter(item => {
     if (!item.BomItem || !item.BomItem.idBarang) return false;
     return item.BomItem.idBarang.toLowerCase().includes(search.toLowerCase());
   });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev && prev.key === key) {
+        return { key, direction: prev.direction === 'ascending' ? 'descending' : 'ascending' };
+      }
+      return { key, direction: 'ascending' };
+    });
+  };
+
+  const sortedBarangKeluar = React.useMemo(() => {
+    if (!sortConfig) return filteredBarangKeluar;
+    const sorted = [...filteredBarangKeluar].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      // Special handling for nested BomItem.idBarang
+      if (sortConfig.key === 'idBarang') {
+        aValue = a.BomItem ? a.BomItem.idBarang : '';
+        bValue = b.BomItem ? b.BomItem.idBarang : '';
+      }
+
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredBarangKeluar, sortConfig]);
+
+  if (loading) return <div>Loading barang keluar data...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="keluar-page">
@@ -150,16 +184,26 @@ function KeluarPage() {
         <table className="master-data-keluar-table">
           <thead>
             <tr>
-              <th>Tanggal</th>
-              <th>KODE BARANG</th>
-              <th>DESKRIPSI</th>
-              <th>KELUAR</th>
+              <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
+                Tanggal {sortConfig?.key === 'tanggal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('idBarang')} style={{ cursor: 'pointer' }}>
+                KODE BARANG {sortConfig?.key === 'idBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+                DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('keluar')} style={{ cursor: 'pointer' }}>
+                KELUAR {sortConfig?.key === 'keluar' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
               <th>KET</th>
-              <th>Project</th>
+              <th onClick={() => handleSort('namaProjek')} style={{ cursor: 'pointer' }}>
+                Project {sortConfig?.key === 'namaProjek' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {filteredBarangKeluar.map((item) => (
+            {sortedBarangKeluar.map((item) => (
               <tr key={item.id}>
                 <td>{item.tanggal}</td>
                 <td>{item.BomItem ? item.BomItem.idBarang : '-'}</td>
@@ -167,38 +211,38 @@ function KeluarPage() {
                 <td>{item.keluar}</td>
                 <td>
                   <div className={`keterangan-container ${expandedKeterangan === item.id ? 'expanded' : ''}`}>
-                    {expandedKeterangan === item.id ? (
-                      <>
-                        <textarea
-                          value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
-                          onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
-                          className="keterangan-textarea"
-                          autoFocus
-                        />
-                        <div className="keterangan-actions">
-                          <button
-                            onClick={() => handleSaveKeterangan(item.id)}
-                            className="confirm-button"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => handleCancelEdit(item.id)}
-                            className="cancel-button"
-                          >
-                            Cancel
-                          </button>
+                      {expandedKeterangan === item.id ? (
+                        <>
+                          <textarea
+                            value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
+                            onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
+                            className="keterangan-textarea"
+                            autoFocus
+                            onBlur={() => handleKeteranganBlur(item.id)}
+                          />
+                          <div className="keterangan-actions">
+                            <button
+                              onClick={() => handleSaveKeterangan(item.id)}
+                              className="confirm-button"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => handleCancelEdit(item.id)}
+                              className="cancel-button"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div 
+                          className="keterangan-preview"
+                          onClick={() => handleKeteranganFocus(item.id)}
+                        >
+                          {item.keterangan || <span className="empty-keterangan">Click to add keterangan</span>}
                         </div>
-                      </>
-                    ) : (
-                      <div 
-                        className="keterangan-preview"
-                        onClick={() => handleKeteranganFocus(item.id)}
-                        onBlur={() => handleKeteranganBlur(item.id)}
-                      >
-                        {item.keterangan || <span className="empty-keterangan">Click to add keterangan</span>}
-                      </div>
-                    )}
+                      )}
                   </div>
                 </td>
                 <td>{item.namaProjek}</td>
@@ -213,5 +257,6 @@ function KeluarPage() {
     </div>
   );
 }
+
 
 export default KeluarPage;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import './MasterDataMasukPage.css';
 
@@ -20,6 +19,7 @@ function MasterDataMasukPage() {
   const [masterData, setMasterData] = useState([]);
   const [filteredMasterData, setFilteredMasterData] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +39,7 @@ function MasterDataMasukPage() {
           kodeBarang: item.kodeBarang,
           deskripsi: item.deskripsi,
           masuk: item.masuk,
-          ket: item.keterangan,
+          ket: item.ket,
           id: item.id
         })));
       } catch (error) {
@@ -70,6 +70,34 @@ function MasterDataMasukPage() {
       item.kodeBarang.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev && prev.key === key) {
+        return { key, direction: prev.direction === 'ascending' ? 'descending' : 'ascending' };
+      }
+      return { key, direction: 'ascending' };
+    });
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const sorted = [...filteredData].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredData, sortConfig]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -326,53 +354,61 @@ function MasterDataMasukPage() {
       )}
 
       <div className="table-container">
-        <table className="master-data-table">
-          <thead>
-            <tr>
-              <th>TANGGAL</th>
-              <th>KODE BARANG</th>
-              <th>DESKRIPSI</th>
-              <th>MASUK</th>
-              <th>KETERANGAN</th>
+      <table className="master-data-table">
+        <thead>
+          <tr>
+            <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
+              TANGGAL {sortConfig?.key === 'tanggal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('kodeBarang')} style={{ cursor: 'pointer' }}>
+              KODE BARANG {sortConfig?.key === 'kodeBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+              DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
+              MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th>KETERANGAN</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedData.map((item, index) => (
+            <tr key={index}>
+              <td>{item.tanggal}</td>
+              <td>{item.kodeBarang}</td>
+              <td>{item.deskripsi}</td>
+              <td>{item.masuk}</td>
+              <td>
+                <div className="ket-container">
+                  <input
+                    type="text"
+                    value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
+                    onChange={(e) => handleKetChange(index, e.target.value)}
+                    onFocus={() => handleKetFocus(index)}
+                    onBlur={() => handleKetBlur(index)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.target.blur();
+                      }
+                    }}
+                    className="input-cell"
+                  />
+                  {activeEdit === index && (
+                    <button
+                      onClick={() => handleSaveKet(index)}
+                      className="confirm-button"
+                      aria-label="Save Keterangan"
+                    >
+                      ✓
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item, index) => (
-              <tr key={index}>
-                <td>{item.tanggal}</td>
-                <td>{item.kodeBarang}</td>
-                <td>{item.deskripsi}</td>
-                <td>{item.masuk}</td>
-                <td>
-                  <div className="ket-container">
-                    <input
-                      type="text"
-                      value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
-                      onChange={(e) => handleKetChange(index, e.target.value)}
-                      onFocus={() => handleKetFocus(index)}
-                      onBlur={() => handleKetBlur(index)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.target.blur();
-                        }
-                      }}
-                      className="input-cell"
-                    />
-                    {activeEdit === index && (
-                      <button
-                        onClick={() => handleSaveKet(index)}
-                        className="confirm-button"
-                        aria-label="Save Keterangan"
-                      >
-                        ✓
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
       </div>
       
       <button className="download-button" onClick={handleDownload}>

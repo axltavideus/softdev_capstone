@@ -15,6 +15,39 @@ const MasterData = () => {
     stokAwal: '',
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedItems = React.useMemo(() => {
+    if (!sortConfig) return filteredItems;
+
+    const sorted = [...filteredItems].sort((a, b) => {
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (sortConfig.direction === 'ascending') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      } else {
+        if (sortConfig.direction === 'ascending') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+    });
+    return sorted;
+  }, [filteredItems, sortConfig]);
 
   useEffect(() => {
     fetchMasterData();
@@ -250,16 +283,28 @@ const MasterData = () => {
       <table className="master-data-table">
         <thead>
           <tr>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>STOK AWAL</th>
-            <th>MASUK</th>
-            <th>KELUAR</th>
-            <th>STOCK AKHIR</th>
+            <th onClick={() => handleSort('idBarang')} style={{ cursor: 'pointer' }}>
+              KODE BARANG {sortConfig?.key === 'idBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+              DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('stokAwal')} style={{ cursor: 'pointer' }}>
+              STOK AWAL {sortConfig?.key === 'stokAwal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
+              MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('keluar')} style={{ cursor: 'pointer' }}>
+              KELUAR {sortConfig?.key === 'keluar' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('stokAkhir')} style={{ cursor: 'pointer' }}>
+              STOCK AKHIR {sortConfig?.key === 'stokAkhir' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
           </tr>
         </thead>
         <tbody>
-          {filteredItems.map((item) => {
+          {sortedItems.map((item) => {
             const inputs = inputValues[item.id] || {};
             return (
               <tr key={item.id}>
