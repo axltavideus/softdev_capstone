@@ -39,42 +39,47 @@
 
 .search-icon {
   position: absolute;
-  left: 1rem;
+  left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  pointer-events: none;
 }
 
-.keluar-table {
+.table-container {
+  margin-bottom: 1.5rem;
+}
+
+.master-data-keluar-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  background-color: white;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.keluar-table th {
+.master-data-keluar-table th {
   background-color: #f2f2f2;
   color: #334155;
   font-weight: 600;
-  padding: 15px 15px;
+  padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.keluar-table td {
+.master-data-keluar-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
 }
 
-.keluar-table tr:last-child td {
+.master-data-keluar-table tr:last-child td {
   border-bottom: none;
 }
 
-.keluar-table tr:hover td {
+.master-data-keluar-table tr:hover td {
   background-color: #f8fafc;
 }
 
@@ -238,5 +243,102 @@
 
   to {
     opacity: 0;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .keluar-page h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem 0.5rem 2rem;
+  }
+
+  .keluar-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+
+  .keluar-table thead,
+  .keluar-table tbody,
+  .keluar-table th,
+  .keluar-table td,
+  .keluar-table tr {
+    display: block;
+  }
+
+  .keluar-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .keluar-table tr {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ddd;
+  }
+
+  .keluar-table td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 50%;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .keluar-table td:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    padding-left: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    content: attr(data-label);
+  }
+
+  .keterangan-container.expanded {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    padding: 1rem;
+  }
+
+  .keterangan-textarea {
+    min-height: 150px;
+  }
+
+  .download-button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .keluar-page h1 {
+    font-size: 1.25rem;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem 0.4rem 1.8rem;
+  }
+
+  .download-button {
+    font-size: 0.9rem;
+    padding: 0.6rem;
   }
 }

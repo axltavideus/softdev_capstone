@@ -273,20 +273,31 @@
 
 .master-data-table th:nth-child(2),
 .master-data-table td:nth-child(2) {
-  width: 15%;
+  width: 50%;
 }
 
 .master-data-table th:nth-child(3),
 .master-data-table td:nth-child(3) {
-  width: 40%;
+  width: 18%;
 }
 
 .master-data-table th:nth-child(4),
 .master-data-table td:nth-child(4) {
+  width: 20%;
+  text-align: right;
+}
+
+.master-data-table th:nth-child(5),
+.master-data-table td:nth-child(5) {
   width: 10%;
   text-align: right;
 }
 
+.master-data-table th:nth-child(6),
+.master-data-table td:nth-child(6) {
+  width: 10%;
+  text-align: right;
+}
 
 .masterdata-masuk-page .masuk-table th:nth-child(5),
 .masterdata-masuk-page .masuk-table td:nth-child(5) {
