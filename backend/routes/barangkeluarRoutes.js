@@ -11,4 +11,7 @@ router.put('/:id/keterangan', barangkeluarController.updateBarangKeluarKeteranga
 // Add BarangKeluar record for a bomItem in a project
 router.post('/:projectId/bomitems/:itemId/keluar', barangkeluarController.addBarangKeluar);
 
+// Add this route
+router.delete('/:id', barangkeluarController.deleteBarangKeluar);
+
 module.exports = router;

@@ -150,6 +150,30 @@ function KeluarPage() {
     return sorted;
   }, [filteredBarangKeluar, sortConfig]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this barang keluar?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/barangkeluar/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete barang keluar');
+      }
+      setBarangKeluar((prev) => prev.filter((item) => item.id !== id));
+      setSuccessMessage('Barang keluar deleted successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      alert('Error deleting barang keluar: ' + error.message);
+    }
+  };
+
   if (loading) return <div>Loading barang keluar data...</div>;
   if (error) return <div>{error}</div>;
 
@@ -200,6 +224,7 @@ function KeluarPage() {
               <th onClick={() => handleSort('namaProjek')} style={{ cursor: 'pointer' }}>
                 Project {sortConfig?.key === 'namaProjek' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
               </th>
+              <th>AKSI</th>
             </tr>
           </thead>
           <tbody>
@@ -246,6 +271,15 @@ function KeluarPage() {
                   </div>
                 </td>
                 <td>{item.namaProjek}</td>
+                <td>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(item.id)}
+                    aria-label="Delete"
+                  >
+                    Hapus
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

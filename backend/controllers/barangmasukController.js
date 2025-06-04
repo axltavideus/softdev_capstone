@@ -30,7 +30,21 @@ const getAllBarangMasuk = async (req, res) => {
   }
 };
 
+const deleteBarangMasuk = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await BarangMasuk.destroy({ where: { id } });
+    if (!deleted) {
+      return res.status(404).json({ message: 'Data masuk not found' });
+    }
+    res.json({ message: 'Data masuk deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createBarangMasuk,
   getAllBarangMasuk,
+  deleteBarangMasuk,
 };

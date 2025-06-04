@@ -212,6 +212,26 @@ const MasterData = () => {
     document.body.removeChild(link);
   };
 
+  const handleDelete = async (itemId) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/masterdata/${itemId}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete item');
+        }
+        setSuccessMessage('Item deleted successfully!');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+        fetchMasterData();
+      } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Failed to delete item');
+      }
+    }
+  };
+
   return (
     <div className="master-data-container">
       <h1>MASTER DATA</h1>
@@ -301,6 +321,7 @@ const MasterData = () => {
             <th onClick={() => handleSort('stokAkhir')} style={{ cursor: 'pointer' }}>
               STOCK AKHIR {sortConfig?.key === 'stokAkhir' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
             </th>
+            <th>AKSI</th> {/* Add this */}
           </tr>
         </thead>
         <tbody>
@@ -333,6 +354,15 @@ const MasterData = () => {
                 <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td>
                 <td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td>
                 <td>{item.stockAkhir !== undefined ? Number(item.stockAkhir).toFixed(2) : '-'}</td>
+                <td>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(item.id)}
+                    aria-label="Delete"
+                  >
+                    Hapus
+                  </button>
+                </td>
               </tr>
             );
           })}

@@ -13,7 +13,7 @@ function MasterDataMasukPage() {
     kodeBarang: '',
     deskripsi: '',
     masuk: '',
-    ket: '',
+    keterangan: '',
   });
 
   const [masterData, setMasterData] = useState([]);
@@ -23,6 +23,8 @@ function MasterDataMasukPage() {
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const kodeBarangInputRef = useRef(null);
 
@@ -39,7 +41,7 @@ function MasterDataMasukPage() {
           kodeBarang: item.kodeBarang,
           deskripsi: item.deskripsi,
           masuk: item.masuk,
-          ket: item.ket,
+          keterangan: item.keterangan,
           id: item.id
         })));
       } catch (error) {
@@ -63,6 +65,26 @@ function MasterDataMasukPage() {
       }
     };
     fetchMasterData();
+  }, []);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch user info');
+        const user = await response.json();
+        setIsAdmin(user.isAdmin === true);
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    };
+    fetchCurrentUser();
   }, []);
 
   const filteredData = data.filter(
@@ -98,6 +120,30 @@ function MasterDataMasukPage() {
     });
     return sorted;
   }, [filteredData, sortConfig]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this data masuk?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/barangmasuk/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete data masuk');
+      }
+      setData((prev) => prev.filter((item) => item.id !== id));
+      setSuccessMessage('Data masuk deleted successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      alert('Error deleting data masuk: ' + error.message);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -157,7 +203,7 @@ function MasterDataMasukPage() {
         });
         setData(prev =>
           prev.map((d, i) =>
-            i === index ? { ...d, ket: editingKet[index] } : d
+            i === index ? { ...d, keterangan: editingKet[index] } : d
           )
         );
         setSuccessMessage('Keterangan updated successfully!');
@@ -189,7 +235,7 @@ function MasterDataMasukPage() {
           kodeBarang: newEntry.kodeBarang,
           deskripsi: newEntry.deskripsi,
           masuk: parseFloat(newEntry.masuk),
-          keterangan: newEntry.ket,
+          keterangan: newEntry.keterangan,
         }),
       });
       if (!response.ok) {
@@ -201,14 +247,14 @@ function MasterDataMasukPage() {
         kodeBarang: savedEntry.kodeBarang,
         deskripsi: savedEntry.deskripsi,
         masuk: savedEntry.masuk,
-        ket: savedEntry.keterangan,
+        keterangan: savedEntry.keterangan,
       }]);
       setNewEntry({
         tanggal: '',
         kodeBarang: '',
         deskripsi: '',
         masuk: '',
-        ket: '',
+        keterangan: '',
       });
       setIsModalOpen(false);
       setSuccessMessage('Data masuk added successfully!');
@@ -226,7 +272,7 @@ function MasterDataMasukPage() {
       item.kodeBarang,
       item.deskripsi,
       item.masuk,
-      item.ket || '-',
+      item.keterangan || '-',
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += headers.join(',') + '\r\n';
@@ -248,7 +294,7 @@ function MasterDataMasukPage() {
       {showSuccess && (
         <div className="success-popup">
           <div className="success-content">
-            <span className="success-icon">✓</span>
+            <i class="fa-solid fa-check"></i>
             <p>{successMessage}</p>
           </div>
         </div>
@@ -335,9 +381,9 @@ function MasterDataMasukPage() {
             />
             <input
               type="text"
-              name="ket"
+              name="keterangan"
               placeholder="Keterangan"
-              value={newEntry.ket || ''}
+              value={newEntry.keterangan || ''}
               onChange={handleInputChange}
               className="new-entry-input"
             />
@@ -354,7 +400,7 @@ function MasterDataMasukPage() {
       )}
 
       <div className="table-container">
-      <table className="master-data-table">
+      <table className="masuk-table">
         <thead>
           <tr>
             <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
@@ -370,6 +416,7 @@ function MasterDataMasukPage() {
               MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
             </th>
             <th>KETERANGAN</th>
+            {isAdmin && <th>AKSI</th>}
           </tr>
         </thead>
         <tbody>
@@ -380,10 +427,10 @@ function MasterDataMasukPage() {
               <td>{item.deskripsi}</td>
               <td>{item.masuk}</td>
               <td>
-                <div className="ket-container">
+                <div className="keterangan-container">
                   <input
                     type="text"
-                    value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
+                    value={editingKet[index] !== undefined ? editingKet[index] : (item.keterangan || '')}
                     onChange={(e) => handleKetChange(index, e.target.value)}
                     onFocus={() => handleKetFocus(index)}
                     onBlur={() => handleKetBlur(index)}
@@ -405,6 +452,17 @@ function MasterDataMasukPage() {
                   )}
                 </div>
               </td>
+              {isAdmin && (
+                <td>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(item.id)}
+                    aria-label="Delete"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
