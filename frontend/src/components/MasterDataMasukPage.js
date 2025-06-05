@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import './MasterDataMasukPage.css';
 
@@ -14,15 +13,20 @@ function MasterDataMasukPage() {
     kodeBarang: '',
     deskripsi: '',
     masuk: '',
-    ket: '',
+    keterangan: '',
   });
 
   const [masterData, setMasterData] = useState([]);
   const [filteredMasterData, setFilteredMasterData] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const kodeBarangInputRef = useRef(null);
 
@@ -39,7 +43,7 @@ function MasterDataMasukPage() {
           kodeBarang: item.kodeBarang,
           deskripsi: item.deskripsi,
           masuk: item.masuk,
-          ket: item.keterangan,
+          keterangan: item.keterangan,
           id: item.id
         })));
       } catch (error) {
@@ -65,11 +69,83 @@ function MasterDataMasukPage() {
     fetchMasterData();
   }, []);
 
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch user info');
+        const user = await response.json();
+        setIsAdmin(user.isAdmin === true);
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
   const filteredData = data.filter(
     (item) =>
       item.kodeBarang.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev && prev.key === key) {
+        return { key, direction: prev.direction === 'ascending' ? 'descending' : 'ascending' };
+      }
+      return { key, direction: 'ascending' };
+    });
+  };
+
+  const sortedData = React.useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const sorted = [...filteredData].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredData, sortConfig]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this data masuk?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/barangmasuk/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete data masuk');
+      }
+      setData((prev) => prev.filter((item) => item.id !== id));
+      setSuccessMessage('Data masuk deleted successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      alert('Error deleting data masuk: ' + error.message);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -129,7 +205,7 @@ function MasterDataMasukPage() {
         });
         setData(prev =>
           prev.map((d, i) =>
-            i === index ? { ...d, ket: editingKet[index] } : d
+            i === index ? { ...d, keterangan: editingKet[index] } : d
           )
         );
         setSuccessMessage('Keterangan updated successfully!');
@@ -161,7 +237,7 @@ function MasterDataMasukPage() {
           kodeBarang: newEntry.kodeBarang,
           deskripsi: newEntry.deskripsi,
           masuk: parseFloat(newEntry.masuk),
-          keterangan: newEntry.ket,
+          keterangan: newEntry.keterangan,
         }),
       });
       if (!response.ok) {
@@ -173,14 +249,14 @@ function MasterDataMasukPage() {
         kodeBarang: savedEntry.kodeBarang,
         deskripsi: savedEntry.deskripsi,
         masuk: savedEntry.masuk,
-        ket: savedEntry.keterangan,
+        keterangan: savedEntry.keterangan,
       }]);
       setNewEntry({
         tanggal: '',
         kodeBarang: '',
         deskripsi: '',
         masuk: '',
-        ket: '',
+        keterangan: '',
       });
       setIsModalOpen(false);
       setSuccessMessage('Data masuk added successfully!');
@@ -198,7 +274,7 @@ function MasterDataMasukPage() {
       item.kodeBarang,
       item.deskripsi,
       item.masuk,
-      item.ket || '-',
+      item.keterangan || '-',
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += headers.join(',') + '\r\n';
@@ -214,13 +290,56 @@ function MasterDataMasukPage() {
     document.body.removeChild(link);
   };
 
+  const [activeEditRow, setActiveEditRow] = useState(null);
+  const [editingRowData, setEditingRowData] = useState({});
+
+  const handleEditRow = (index) => {
+    setActiveEditRow(index);
+    setEditingRowData({ ...sortedData[index] });
+  };
+
+  const handleSaveRow = async (index) => {
+    try {
+      const item = sortedData[index];
+      const response = await fetch(`http://localhost:5000/api/barangmasuk/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingRowData),
+      });
+      if (!response.ok) throw new Error('Failed to update data');
+      setSuccessMessage('Data masuk updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setActiveEditRow(null);
+      setEditingRowData({});
+      // Refresh data
+      const res = await fetch('http://localhost:5000/api/barangmasuk');
+      setData(await res.json());
+    } catch (error) {
+      alert('Failed to update data: ' + error.message);
+    }
+  };
+
+  const handleCancelEditRow = () => {
+    setActiveEditRow(null);
+    setEditingRowData({});
+  };
+
+  const handleEditRowChange = (e) => {
+    const { name, value } = e.target;
+    setEditingRowData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
     <div className="master-data-container">
       <h1>MASTER DATA (MASUK)</h1>
       {showSuccess && (
         <div className="success-popup">
           <div className="success-content">
-            <span className="success-icon">✓</span>
+            <i class="fa-solid fa-check"></i>
             <p>{successMessage}</p>
           </div>
         </div>
@@ -307,9 +426,9 @@ function MasterDataMasukPage() {
             />
             <input
               type="text"
-              name="ket"
+              name="keterangan"
               placeholder="Keterangan"
-              value={newEntry.ket || ''}
+              value={newEntry.keterangan || ''}
               onChange={handleInputChange}
               className="new-entry-input"
             />
@@ -326,58 +445,195 @@ function MasterDataMasukPage() {
       )}
 
       <div className="table-container">
-        <table className="master-data-table">
-          <thead>
-            <tr>
-              <th>TANGGAL</th>
-              <th>KODE BARANG</th>
-              <th>DESKRIPSI</th>
-              <th>MASUK</th>
-              <th>KETERANGAN</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item, index) => (
-              <tr key={index}>
-                <td>{item.tanggal}</td>
-                <td>{item.kodeBarang}</td>
-                <td>{item.deskripsi}</td>
-                <td>{item.masuk}</td>
+      <table className="masuk-table">
+        <thead>
+          <tr>
+            <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
+              TANGGAL {sortConfig?.key === 'tanggal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('kodeBarang')} style={{ cursor: 'pointer' }}>
+              KODE BARANG {sortConfig?.key === 'kodeBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+              DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
+              MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th>KETERANGAN</th>
+            {isAdmin && <th>AKSI</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {sortedData.map((item, index) => (
+            <tr key={index}>
+              <td>
+                {activeEditRow === index ? (
+                  <input
+                    type="date"
+                    name="tanggal"
+                    value={editingRowData.tanggal}
+                    onChange={handleEditRowChange}
+                    className="input-cell"
+                  />
+                ) : (
+                  item.tanggal
+                )}
+              </td>
+              <td>{item.kodeBarang}</td>
+              <td>
+                {activeEditRow === index ? (
+                  <input
+                    type="text"
+                    name="deskripsi"
+                    value={editingRowData.deskripsi}
+                    onChange={handleEditRowChange}
+                    className="input-cell"
+                  />
+                ) : (
+                  item.deskripsi
+                )}
+              </td>
+              <td>{item.masuk}</td>
+              <td>
+                <div className="keterangan-container">
+                  <input
+                    type="text"
+                    value={editingKet[index] !== undefined ? editingKet[index] : (item.keterangan || '')}
+                    onChange={(e) => handleKetChange(index, e.target.value)}
+                    onFocus={() => handleKetFocus(index)}
+                    onBlur={() => handleKetBlur(index)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.target.blur();
+                      }
+                    }}
+                    className="input-cell"
+                  />
+                  {activeEdit === index && (
+                    <button
+                      onClick={() => handleSaveKet(index)}
+                      className="confirm-button"
+                      aria-label="Save Keterangan"
+                    >
+                      ✓
+                    </button>
+                  )}
+                </div>
+              </td>
+              {isAdmin && (
                 <td>
-                  <div className="ket-container">
-                    <input
-                      type="text"
-                      value={editingKet[index] !== undefined ? editingKet[index] : (item.ket || '')}
-                      onChange={(e) => handleKetChange(index, e.target.value)}
-                      onFocus={() => handleKetFocus(index)}
-                      onBlur={() => handleKetBlur(index)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.target.blur();
-                        }
-                      }}
-                      className="input-cell"
-                    />
-                    {activeEdit === index && (
-                      <button
-                        onClick={() => handleSaveKet(index)}
-                        className="confirm-button"
-                        aria-label="Save Keterangan"
-                      >
-                        ✓
-                      </button>
+                  <div className="aksi-buttons">
+                    {activeEditRow === index ? (
+                      <>
+                        <button className="confirm-button" onClick={() => handleSaveRow(index)}>Save</button>
+                        <button className="cancel-button" onClick={handleCancelEditRow}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="edit-button"
+                          onClick={() => handleEditRow(index)}
+                          aria-label="Edit"
+                        >
+                          <i className="fa-solid fa-pen"></i>
+                        </button>
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(item.id)}
+                          aria-label="Delete"
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       </div>
       
       <button className="download-button" onClick={handleDownload}>
         DOWNLOAD
       </button>
+
+      {editModalOpen && editItem && (
+        <div className="modal-overlay" onClick={() => setEditModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2>Edit Data Masuk</h2>
+            <input
+              type="date"
+              name="tanggal"
+              value={editItem.tanggal}
+              onChange={e => setEditItem(prev => ({ ...prev, tanggal: e.target.value }))}
+              className="new-entry-input"
+            />
+            <input
+              type="text"
+              name="kodeBarang"
+              value={editItem.kodeBarang}
+              onChange={e => setEditItem(prev => ({ ...prev, kodeBarang: e.target.value }))}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="text"
+              name="deskripsi"
+              value={editItem.deskripsi}
+              onChange={e => setEditItem(prev => ({ ...prev, deskripsi: e.target.value }))}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="number"
+              name="masuk"
+              value={editItem.masuk}
+              onChange={e => setEditItem(prev => ({ ...prev, masuk: e.target.value }))}
+              className="new-entry-input"
+            />
+            <input
+              type="text"
+              name="keterangan"
+              value={editItem.keterangan || ''}
+              onChange={e => setEditItem(prev => ({ ...prev, keterangan: e.target.value }))}
+              className="new-entry-input"
+            />
+            <div className="modal-buttons">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`http://localhost:5000/api/barangmasuk/${editItem.id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editItem),
+                    });
+                    if (!response.ok) throw new Error('Failed to update data');
+                    setSuccessMessage('Data masuk updated successfully!');
+                    setShowSuccess(true);
+                    setTimeout(() => setShowSuccess(false), 3000);
+                    setEditModalOpen(false);
+                    setEditItem(null);
+                    // Refresh data
+                    const res = await fetch('http://localhost:5000/api/barangmasuk');
+                    setData(await res.json());
+                  } catch (error) {
+                    alert('Failed to update data: ' + error.message);
+                  }
+                }}
+                className="add-entry-button"
+              >
+                Save
+              </button>
+              <button onClick={() => setEditModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,6 +14,9 @@ function ProjectPage({ isAdmin }) {
   const [keluarValues, setKeluarValues] = useState({});
   const [checkedStatus, setCheckedStatus] = useState({});
 
+  // Sorting state per category
+  const [sortConfig, setSortConfig] = useState({});
+
   // OCR related states
   const [selectedFile, setSelectedFile] = useState(null);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -83,6 +86,48 @@ function ProjectPage({ isAdmin }) {
       // Revert checkbox state on failure
       setCheckedStatus(prev => ({ ...prev, [itemId]: !newChecked }));
     }
+  };
+
+  // Sorting handler
+  const handleSort = (category, key) => {
+    setSortConfig(prev => {
+      const currentSort = prev[category];
+      if (currentSort && currentSort.key === key) {
+        // Toggle direction
+        const newDirection = currentSort.direction === 'ascending' ? 'descending' : 'ascending';
+        return { ...prev, [category]: { key, direction: newDirection } };
+      } else {
+        // Default to ascending
+        return { ...prev, [category]: { key, direction: 'ascending' } };
+      }
+    });
+  };
+
+  // Function to sort items array based on sortConfig
+  const sortedItems = (category, items) => {
+    const config = sortConfig[category];
+    if (!config) return items;
+
+    const { key, direction } = config;
+
+    const sorted = [...items].sort((a, b) => {
+      let aValue = a[key];
+      let bValue = b[key];
+
+      // Handle undefined or null values
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      // Convert to string for case-insensitive comparison if values are strings
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+      if (aValue < bValue) return direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
   };
 
   const handleSubmitAll = async () => {
@@ -370,61 +415,78 @@ function ProjectPage({ isAdmin }) {
         {ocrResult && <div className="ocr-result">{ocrResult}</div>}
       </div> */}
 
-      {Object.keys(groupedItems).map((category) => (
-        <div key={category} className="category-group">
-          <h4 className="category-title">{category}</h4>
-          <table className="project-table">
-            <thead>
-              <tr>
-                <th>Done</th>
-                <th>ID BARANG</th>
-                <th>MATERIAL PLAT &amp; PROFIL</th>
-                <th>QTY/UNIT</th>
-                <th>T. QTY</th>
-                <th>SATUAN</th>
-                <th>KETERANGAN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedItems[category].map((item) => {
-                const sumKeluar = keluarValues[item.id] || 0;
-                const checked = checkedStatus[item.id] || false;
-                return (
-                  <tr key={item.id} className={getRowClassName(item)}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => handleCheckboxChange(item.id)}
-                      />
-                    </td>
-                    <td>{item.idBarang}</td>
-                    <td>{item.deskripsi}</td>
-                    <td>{item.qtyPerUnit}</td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={inputValues[item.id] || ''}
-                        onChange={(e) => handleInputChange(item.id, e.target.value)}
-                        className="total-qty-input"
-                        placeholder={`Max ${item.totalQty}`}
-                        disabled={checked}
-                      />
-                      {errorMessages[item.id] && (
-                        <div className="error-message">{errorMessages[item.id]}</div>
-                      )}
-                      / {item.totalQty}
-                    </td>
-                    <td>{item.satuan}</td>
-                    <td>{item.keterangan}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ))}
+      {Object.keys(groupedItems).map((category) => {
+        const sortedCategoryItems = sortedItems(category, groupedItems[category]);
+        return (
+          <div key={category} className="category-group">
+            <h4 className="category-title">{category}</h4>
+            <table className="project-table">
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort(category, 'checked')} style={{ cursor: 'pointer' }}>
+                    Done {sortConfig[category]?.key === 'checked' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => handleSort(category, 'idBarang')} style={{ cursor: 'pointer' }}>
+                    ID BARANG {sortConfig[category]?.key === 'idBarang' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => handleSort(category, 'deskripsi')} style={{ cursor: 'pointer' }}>
+                    MATERIAL PLAT &amp; PROFIL {sortConfig[category]?.key === 'deskripsi' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => handleSort(category, 'qtyPerUnit')} style={{ cursor: 'pointer' }}>
+                    QTY/UNIT {sortConfig[category]?.key === 'qtyPerUnit' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                  <th>
+                    T. QTY
+                  </th>
+                  <th onClick={() => handleSort(category, 'satuan')} style={{ cursor: 'pointer' }}>
+                    SATUAN {sortConfig[category]?.key === 'satuan' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => handleSort(category, 'keterangan')} style={{ cursor: 'pointer' }}>
+                    KETERANGAN {sortConfig[category]?.key === 'keterangan' ? (sortConfig[category].direction === 'ascending' ? '▲' : '▼') : ''}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCategoryItems.map((item) => {
+                  const sumKeluar = keluarValues[item.id] || 0;
+                  const checked = checkedStatus[item.id] || false;
+                  return (
+                    <tr key={item.id} className={getRowClassName(item)}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => handleCheckboxChange(item.id)}
+                        />
+                      </td>
+                      <td>{item.idBarang}</td>
+                      <td>{item.deskripsi}</td>
+                      <td>{item.qtyPerUnit}</td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          value={inputValues[item.id] || ''}
+                          onChange={(e) => handleInputChange(item.id, e.target.value)}
+                          className="total-qty-input"
+                          placeholder={`Max ${item.totalQty}`}
+                          disabled={checked}
+                        />
+                        {errorMessages[item.id] && (
+                          <div className="error-message">{errorMessages[item.id]}</div>
+                        )}
+                        / {item.totalQty}
+                      </td>
+                      <td>{item.satuan}</td>
+                      <td>{item.keterangan}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
 
       <button onClick={handleSubmitAll} className="submit-all-button">Submit All</button>
       <Link to="/">Back to Projects</Link>
