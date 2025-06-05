@@ -15,6 +15,41 @@ const MasterData = () => {
     stokAwal: '',
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedItems = React.useMemo(() => {
+    if (!sortConfig) return filteredItems;
+
+    const sorted = [...filteredItems].sort((a, b) => {
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (sortConfig.direction === 'ascending') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      } else {
+        if (sortConfig.direction === 'ascending') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+    });
+    return sorted;
+  }, [filteredItems, sortConfig]);
 
   useEffect(() => {
     fetchMasterData();
@@ -179,6 +214,58 @@ const MasterData = () => {
     document.body.removeChild(link);
   };
 
+  const handleDelete = async (itemId) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/masterdata/${itemId}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete item');
+        }
+        setSuccessMessage('Item deleted successfully!');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+        fetchMasterData();
+      } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Failed to delete item');
+      }
+    }
+  };
+
+  const handleEditClick = (item) => {
+    setEditItem({ ...item });
+    setEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditItem((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/masterdata/${editItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editItem),
+      });
+      if (!response.ok) throw new Error('Failed to update item');
+      setSuccessMessage('Item updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setEditModalOpen(false);
+      setEditItem(null);
+      fetchMasterData();
+    } catch (error) {
+      alert('Failed to update item: ' + error.message);
+    }
+  };
+
   return (
     <div className="master-data-container">
       <h1>MASTER DATA</h1>
@@ -247,19 +334,73 @@ const MasterData = () => {
         </div>
       )}
 
+      {editModalOpen && editItem && (
+        <div className="modal-overlay" onClick={() => setEditModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Master Data</h2>
+            <input
+              type="text"
+              name="idBarang"
+              placeholder="Kode Barang"
+              value={editItem.idBarang}
+              onChange={handleEditChange}
+              className="new-entry-input"
+              readOnly
+            />
+            <input
+              type="text"
+              name="deskripsi"
+              placeholder="Deskripsi"
+              value={editItem.deskripsi}
+              onChange={handleEditChange}
+              className="new-entry-input"
+            />
+            <input
+              type="number"
+              name="stokAwal"
+              placeholder="Stok Awal"
+              value={editItem.stokAwal}
+              onChange={handleEditChange}
+              className="new-entry-input"
+            />
+            <div className="modal-buttons">
+              <button onClick={handleEditSave} className="add-entry-button">
+                Save Changes
+              </button>
+              <button onClick={() => setEditModalOpen(false)} className="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table className="master-data-table">
         <thead>
           <tr>
-            <th>KODE BARANG</th>
-            <th>DESKRIPSI</th>
-            <th>STOK AWAL</th>
-            <th>MASUK</th>
-            <th>KELUAR</th>
-            <th>STOCK AKHIR</th>
+            <th onClick={() => handleSort('idBarang')} style={{ cursor: 'pointer' }}>
+              KODE BARANG {sortConfig?.key === 'idBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+              DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('stokAwal')} style={{ cursor: 'pointer' }}>
+              STOK AWAL {sortConfig?.key === 'stokAwal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
+              MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('keluar')} style={{ cursor: 'pointer' }}>
+              KELUAR {sortConfig?.key === 'keluar' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('stokAkhir')} style={{ cursor: 'pointer' }}>
+              STOCK AKHIR {sortConfig?.key === 'stokAkhir' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th>AKSI</th> {/* Add this */}
           </tr>
         </thead>
         <tbody>
-          {filteredItems.map((item) => {
+          {sortedItems.map((item) => {
             const inputs = inputValues[item.id] || {};
             return (
               <tr key={item.id}>
@@ -288,6 +429,22 @@ const MasterData = () => {
                 <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td>
                 <td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td>
                 <td>{item.stockAkhir !== undefined ? Number(item.stockAkhir).toFixed(2) : '-'}</td>
+                <td>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(item.id)}
+                    aria-label="Delete"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                  <button
+                    className="edit-button"
+                    onClick={() => handleEditClick(item)}
+                    aria-label="Edit"
+                  >
+                    <i class="fa-solid fa-pencil"></i>
+                  </button>
+                </td>
               </tr>
             );
           })}

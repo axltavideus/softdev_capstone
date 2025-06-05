@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
-function Sidebar({ handleLogout }) {
+function Sidebar({ handleLogout, isAdmin }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -51,26 +51,36 @@ function Sidebar({ handleLogout }) {
                   </Link>
                 </li>
                 
-                <li className="menu-section">
-                  <Link to="/master_data" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                    <span className="icon">📊</span>
-                    <span className="text">Master Data</span>
-                  </Link>
-                  <ul className="submenu">
-                    <li>
-                      <Link to="/keluar" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                        <span className="icon">↩️</span>
-                        <span className="text">Keluar</span>
+                {isAdmin && (
+                  <>
+                    <li className="menu-section">
+                      <Link to="/master_data" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                        <span className="icon">📊</span>
+                        <span className="text">Master Data</span>
                       </Link>
+                      <ul className="submenu">
+                        <li>
+                          <Link to="/keluar" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                            <span className="icon">↩️</span>
+                            <span className="text">Keluar</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/masuk" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                            <span className="icon">↪️</span>
+                            <span className="text">Masuk</span>
+                          </Link>
+                        </li>
+                      </ul>
                     </li>
                     <li>
-                      <Link to="/masuk" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
-                        <span className="icon">↪️</span>
-                        <span className="text">Masuk</span>
+                      <Link to="/users" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
+                        <span className="icon">👥</span>
+                        <span className="text">User Management</span>
                       </Link>
                     </li>
-                  </ul>
-                </li>
+                  </>
+                )}
               </ul>
             </nav>
             <div className="sidebar-footer">
