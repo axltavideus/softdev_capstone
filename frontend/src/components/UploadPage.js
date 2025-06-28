@@ -115,11 +115,14 @@ function UploadPage({ isAdmin }) {
               </td>
               <td>{project.projectCode}</td>
               <td>
-                <progress
-                  value={project.progress}
-                  max="1"
-                  style={{ width: '150px', height: '15px', color: 'green' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <progress
+                    value={project.progress}
+                    max="1"
+                    style={{ width: '150px', height: '15px', color: 'green' }}
+                  />
+                  <span>{Math.round(project.progress * 100)}%</span>
+                </div>
               </td>
             </tr>
           ))}
