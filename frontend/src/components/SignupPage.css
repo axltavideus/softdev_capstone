@@ -5,7 +5,7 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: url('./bg-sgn.jpg') no-repeat center center fixed;
+    background: url('./background-Login.png') no-repeat center center fixed;
     /* background: #ffffff; */
     background-size: cover;
     padding: 2rem;

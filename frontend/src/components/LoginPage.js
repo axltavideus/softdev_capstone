@@ -43,7 +43,7 @@ const LoginPage = ({ onLogin }) => {
       <div className="login-background"></div>
       <div className="login-container">
         <img src='./assets/Logo_SMI.png' alt="Company Logo" className="logo" />
-        <h2>Welcome Back</h2>
+        <h2>Selamat Datang</h2>
         
         {error && (
           <div className="error-message">
