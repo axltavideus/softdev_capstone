@@ -26,6 +26,10 @@ BomItem.belongsTo(Project, { foreignKey: 'projectId' });
 BomItem.hasMany(BarangKeluar, { as: 'barangKeluars', foreignKey: 'bomItemId' });
 BarangKeluar.belongsTo(BomItem, { foreignKey: 'bomItemId' });
 
+// Add association between BomItem and MasterData on idBarang
+BomItem.hasOne(MasterData, { foreignKey: 'idBarang', sourceKey: 'idBarang' });
+MasterData.belongsTo(BomItem, { foreignKey: 'idBarang', targetKey: 'idBarang' });
+
 module.exports = {
   sequelize,
   Project,

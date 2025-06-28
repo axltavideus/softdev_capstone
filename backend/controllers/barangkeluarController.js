@@ -1,5 +1,6 @@
 const { Project, BomItem, BarangKeluar, MasterData } = require('../models');
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col, literal, where } = require('sequelize');
+const sequelize = require('../models').sequelize;
 
 module.exports = {
   // Get barang keluar data, optionally filtered by projectId
@@ -58,51 +59,69 @@ module.exports = {
       // Threshold for low stock, can be adjusted
       const LOW_STOCK_THRESHOLD = 10;
 
-      // Aggregate total keluar quantity grouped by bomItemId
-      const usageData = await BarangKeluar.findAll({
+      // 1. Get the item with the highest totalKeluar (most frequently issued)
+      const mostFrequentUsage = await BarangKeluar.findAll({
         attributes: [
           'bomItemId',
           [fn('SUM', col('keluar')), 'totalKeluar']
         ],
         group: ['bomItemId'],
         order: [[literal('totalKeluar'), 'DESC']],
-        limit: 10, // top 10 frequently used items
+        limit: 1,
       });
 
-      const bomItemIds = usageData.map(item => item.bomItemId);
+      const mostFrequentBomItemId = mostFrequentUsage.length > 0 ? mostFrequentUsage[0].bomItemId : null;
 
-      // Fetch bomItems with stock info and join with usageData
-      const bomItems = await BomItem.findAll({
-        where: { id: bomItemIds },
+      // 2. Get the item with the lowest stock (almost out of stock)
+      // Join BomItem and MasterData on idBarang
+      const almostOutOfStockItem = await BomItem.findOne({
+        attributes: ['id', 'idBarang', 'deskripsi'],
         include: [{
           model: MasterData,
-          attributes: ['stock'], // assuming stock field exists in MasterData
+          attributes: ['stockAkhir'],
+          required: true,
+          where: {
+            stockAkhir: { [Op.lte]: LOW_STOCK_THRESHOLD }
+          }
         }],
       });
 
-      // Map bomItemId to totalKeluar
-      const usageMap = {};
-      usageData.forEach(item => {
-        usageMap[item.bomItemId] = parseInt(item.get('totalKeluar'), 10);
-      });
+      // Fetch details for most frequent item with stock from MasterData
+      let mostFrequentItem = null;
+      if (mostFrequentBomItemId) {
+        mostFrequentItem = await BomItem.findOne({
+          where: { id: mostFrequentBomItemId },
+          attributes: ['id', 'idBarang', 'deskripsi'],
+          include: [{
+            model: MasterData,
+            attributes: ['stockAkhir'],
+            required: false,
+          }],
+        });
+      }
 
-      // Filter items that are almost out of stock
-      const filteredItems = bomItems.filter(item => {
-        const stock = item.MasterData ? item.MasterData.stock : 0;
-        const totalKeluar = usageMap[item.id] || 0;
-        return stock <= LOW_STOCK_THRESHOLD;
-      });
+      // Map usage for most frequent item
+      const mostFrequentTotalKeluar = mostFrequentUsage.length > 0 ? parseInt(mostFrequentUsage[0].get('totalKeluar'), 10) : 0;
 
-      // Map to response format
-      const result = filteredItems.map(item => ({
-        id: item.id,
-        idBarang: item.idBarang,
-        deskripsi: item.deskripsi,
-        stock: item.MasterData ? item.MasterData.stock : 0,
-        totalKeluar: usageMap[item.id] || 0,
-      }));
+      // Prepare response
+      const response = {
+        mostFrequent: mostFrequentItem ? {
+          id: mostFrequentItem.id,
+          idBarang: mostFrequentItem.idBarang,
+          deskripsi: mostFrequentItem.deskripsi,
+          stock: mostFrequentItem.MasterData ? mostFrequentItem.MasterData.stockAkhir : 0,
+          totalKeluar: mostFrequentTotalKeluar,
+        } : null,
+        almostOutOfStock: almostOutOfStockItem ? {
+          id: almostOutOfStockItem.id,
+          idBarang: almostOutOfStockItem.idBarang,
+          deskripsi: almostOutOfStockItem.deskripsi,
+          stock: almostOutOfStockItem.MasterData ? almostOutOfStockItem.MasterData.stockAkhir : 0,
+          totalKeluar: 0, // unknown or not relevant here
+        } : null,
+      };
 
-      res.json(result);
+      res.json(response);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

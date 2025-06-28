@@ -1,54 +1,56 @@
-.upload-page {
-  padding: 20px;
-}
-
-.upload-page h2 {
-  margin-bottom: 10px;
-}
-
-.upload-page label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.upload-page input[type="file"] {
-  margin-bottom: 10px;
-}
-
-.upload-page button {
-  background-color: #d3d3d3;
-  border: none;
-  padding: 6px 16px;
-  cursor: pointer;
+.upload-top-section {
+  display: flex;
+  gap: 20px;
   margin-bottom: 20px;
-  margin-left: 10px;
-  border-radius: 4px;
 }
 
-.upload-page button:disabled {
-  background-color: #aaa;
-  cursor: not-allowed;
+.upload-bom-section {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
-.project-table {
+.frequent-low-stock-card {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fff8e1;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.frequent-low-stock-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #d84315;
+}
+
+.frequent-low-stock-card table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.project-table th,
-.project-table td {
-  border: 1px solid #ffffff;
+.frequent-low-stock-card th,
+.frequent-low-stock-card td {
+  border: 1px solid #ddd;
   padding: 8px;
-}
-
-.project-table th {
-  background-color: #ffffff;
   text-align: left;
 }
 
-.project-table a {
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
+.frequent-low-stock-card th {
+  background-color: #ffcc80;
+  font-weight: bold;
+}
+
+.frequent-low-stock-card tr:nth-child(even) {
+  background-color: #fff3e0;
+}
+
+.frequent-low-stock-card p {
+  font-style: italic;
+  color: #999;
 }
