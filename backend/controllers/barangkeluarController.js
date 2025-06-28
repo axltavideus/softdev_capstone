@@ -1,4 +1,5 @@
-const { Project, BomItem, BarangKeluar } = require('../models');
+const { Project, BomItem, BarangKeluar, MasterData } = require('../models');
+const { Op, fn, col, literal } = require('sequelize');
 
 module.exports = {
   // Get barang keluar data, optionally filtered by projectId
@@ -6,7 +7,6 @@ module.exports = {
     try {
       const { projectId } = req.query; // use query param for filtering
       const { search } = req.query;
-      const { Op } = require('sequelize');
       let whereClause = {};
       let bomItemWhereClause = undefined;
 
@@ -32,18 +32,76 @@ module.exports = {
           where: bomItemWhereClause,
           include: [{
             model: Project,
-            attributes: ['projectName'],
+            attributes: ['projectName', 'projectCode'],
           }],
         }],
       });
-      // Map the result to include projectName at top level for convenience
+      // Map the result to include projectName and projectCode at top level for convenience
       const result = barangKeluar.map(item => {
         const projectName = item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectName : null;
+        const projectCode = item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectCode : null;
         return {
           ...item.toJSON(),
           namaProjek: projectName,
+          projectCode: projectCode,
         };
       });
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  // New endpoint to get frequently used and almost out of stock items
+  async getFrequentLowStockItems(req, res) {
+    try {
+      // Threshold for low stock, can be adjusted
+      const LOW_STOCK_THRESHOLD = 10;
+
+      // Aggregate total keluar quantity grouped by bomItemId
+      const usageData = await BarangKeluar.findAll({
+        attributes: [
+          'bomItemId',
+          [fn('SUM', col('keluar')), 'totalKeluar']
+        ],
+        group: ['bomItemId'],
+        order: [[literal('totalKeluar'), 'DESC']],
+        limit: 10, // top 10 frequently used items
+      });
+
+      const bomItemIds = usageData.map(item => item.bomItemId);
+
+      // Fetch bomItems with stock info and join with usageData
+      const bomItems = await BomItem.findAll({
+        where: { id: bomItemIds },
+        include: [{
+          model: MasterData,
+          attributes: ['stock'], // assuming stock field exists in MasterData
+        }],
+      });
+
+      // Map bomItemId to totalKeluar
+      const usageMap = {};
+      usageData.forEach(item => {
+        usageMap[item.bomItemId] = parseInt(item.get('totalKeluar'), 10);
+      });
+
+      // Filter items that are almost out of stock
+      const filteredItems = bomItems.filter(item => {
+        const stock = item.MasterData ? item.MasterData.stock : 0;
+        const totalKeluar = usageMap[item.id] || 0;
+        return stock <= LOW_STOCK_THRESHOLD;
+      });
+
+      // Map to response format
+      const result = filteredItems.map(item => ({
+        id: item.id,
+        idBarang: item.idBarang,
+        deskripsi: item.deskripsi,
+        stock: item.MasterData ? item.MasterData.stock : 0,
+        totalKeluar: usageMap[item.id] || 0,
+      }));
+
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -110,6 +168,33 @@ module.exports = {
       res.json({ message: 'BarangKeluar deleted successfully' });
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Update BarangKeluar record by id
+  async updateBarangKeluar(req, res) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const barangKeluar = await BarangKeluar.findByPk(id);
+      if (!barangKeluar) {
+        return res.status(404).json({ error: 'BarangKeluar item not found' });
+      }
+
+      // Whitelist allowed fields to update
+      const allowedFields = ['tanggal', 'deskripsi', 'keluar', 'keterangan', 'namaProjek'];
+      const filteredData = {};
+      for (const field of allowedFields) {
+        if (updateData.hasOwnProperty(field)) {
+          filteredData[field] = updateData[field];
+        }
+      }
+
+      await barangKeluar.update(filteredData);
+      res.json(barangKeluar);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   },
 };
