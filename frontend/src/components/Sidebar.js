@@ -76,7 +76,7 @@ function Sidebar({ handleLogout, isAdmin }) {
                     <li>
                       <Link to="/users" className="sidebar-button" onClick={() => isMobile && setIsOpen(false)}>
                         <span className="icon">👥</span>
-                        <span className="text">User Management</span>
+                        <span className="text">Manajemen User (Atur Pengguna)</span>
                       </Link>
                     </li>
                   </>

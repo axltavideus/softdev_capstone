@@ -20,13 +20,12 @@ function MasterDataMasukPage() {
   const [filteredMasterData, setFilteredMasterData] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
-
-  // Modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeEditRow, setActiveEditRow] = useState(null);
+  const [editingRowData, setEditingRowData] = useState({});
 
   const kodeBarangInputRef = useRef(null);
 
@@ -34,18 +33,9 @@ function MasterDataMasukPage() {
     const fetchData = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/barangmasuk');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
+        if (!response.ok) throw new Error('Failed to fetch data');
         const fetchedData = await response.json();
-        setData(fetchedData.map(item => ({
-          tanggal: item.tanggal,
-          kodeBarang: item.kodeBarang,
-          deskripsi: item.deskripsi,
-          masuk: item.masuk,
-          keterangan: item.keterangan,
-          id: item.id
-        })));
+        setData(fetchedData);
       } catch (error) {
         alert('Error fetching data: ' + error.message);
       }
@@ -57,9 +47,7 @@ function MasterDataMasukPage() {
     const fetchMasterData = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/masterdata');
-        if (!response.ok) {
-          throw new Error('Failed to fetch master data');
-        }
+        if (!response.ok) throw new Error('Failed to fetch master data');
         const fetchedMasterData = await response.json();
         setMasterData(fetchedMasterData);
       } catch (error) {
@@ -75,9 +63,7 @@ function MasterDataMasukPage() {
       if (!token) return;
       try {
         const response = await fetch('http://localhost:5000/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Failed to fetch user info');
         const user = await response.json();
@@ -124,26 +110,20 @@ function MasterDataMasukPage() {
   }, [filteredData, sortConfig]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this data masuk?')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this entry?')) return;
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/barangmasuk/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) {
-        throw new Error('Failed to delete data masuk');
-      }
+      if (!response.ok) throw new Error('Failed to delete data');
       setData((prev) => prev.filter((item) => item.id !== id));
-      setSuccessMessage('Data masuk deleted successfully!');
+      setSuccessMessage('Entry deleted successfully!');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
-      alert('Error deleting data masuk: ' + error.message);
+      alert('Error deleting data: ' + error.message);
     }
   };
 
@@ -160,7 +140,6 @@ function MasterDataMasukPage() {
       } else {
         setShowDropdown(false);
       }
-      // Clear deskripsi if kodeBarang is manually changed
       setNewEntry((prev) => ({ ...prev, deskripsi: '' }));
     } else {
       setNewEntry((prev) => ({ ...prev, [name]: value }));
@@ -168,17 +147,13 @@ function MasterDataMasukPage() {
   };
 
   const handleSelectItem = (item) => {
-    console.log('handleSelectItem called with item:', item);
     setNewEntry((prev) => ({
       ...prev,
       kodeBarang: item.idBarang,
       deskripsi: item.deskripsi,
     }));
-    // Hide dropdown immediately after item selection
     setShowDropdown(false);
-    if (kodeBarangInputRef.current) {
-      kodeBarangInputRef.current.focus();
-    }
+    if (kodeBarangInputRef.current) kodeBarangInputRef.current.focus();
   };
 
   const handleKetChange = (index, value) => {
@@ -187,70 +162,75 @@ function MasterDataMasukPage() {
 
   const handleKetFocus = (index) => {
     setActiveEdit(index);
-  };
-
-  const handleKetBlur = async (index) => {
-    if (editingKet[index] !== undefined) {
-      await handleSaveKet(index);
-    }
-    setActiveEdit(null);
+    setEditingKet(prev => ({
+      ...prev,
+      [index]: prev[index] === undefined ? data.find((_, i) => i === index)?.keterangan || '' : prev[index]
+    }));
   };
 
   const handleSaveKet = async (index) => {
-    if (editingKet[index] !== undefined) {
-      try {
-        const item = filteredData[index];
-        await axios.put(`http://localhost:5000/api/barangmasuk/${item.id}/keterangan`, {
-          keterangan: editingKet[index],
-        });
-        setData(prev =>
-          prev.map((d, i) =>
-            i === index ? { ...d, keterangan: editingKet[index] } : d
-          )
-        );
-        setSuccessMessage('Keterangan updated successfully!');
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-      } catch (err) {
-        console.error('Failed to update keterangan', err);
+    try {
+      const item = sortedData[index];
+      if (!item || !item.id) throw new Error('Invalid item or missing ID');
+
+      const keterangan = editingKet[index];
+      if (keterangan === undefined) throw new Error('No vendor/supplier information to save');
+
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found');
+
+      const response = await fetch(`http://localhost:5000/api/barangmasuk/${item.id}/keterangan`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ keterangan })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update vendor/supplier information');
       }
+
+      setData(prev =>
+        prev.map(d => 
+          d.id === item.id ? { ...d, keterangan } : d
+        )
+      );
+
+      setSuccessMessage('Vendor/Supplier information updated successfully!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setActiveEdit(null);
+    } catch (err) {
+      console.error('Error updating vendor/supplier:', err);
+      setSuccessMessage(`Failed to update: ${err.message}`);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     }
   };
 
   const handleAddEntry = async () => {
-    if (
-      !newEntry.tanggal ||
-      !newEntry.kodeBarang ||
-      !newEntry.deskripsi
-    ) {
-      alert('Please fill in all fields');
+    if (!newEntry.tanggal || !newEntry.kodeBarang || !newEntry.deskripsi) {
+      alert('Please fill in all required fields');
       return;
     }
     try {
       const response = await fetch('http://localhost:5000/api/barangmasuk', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tanggal: newEntry.tanggal,
           kodeBarang: newEntry.kodeBarang,
           deskripsi: newEntry.deskripsi,
-          masuk: parseFloat(newEntry.masuk),
+          masuk: parseFloat(newEntry.masuk) || 0,
           keterangan: newEntry.keterangan,
         }),
       });
-      if (!response.ok) {
-        throw new Error('Failed to save data');
-      }
+      if (!response.ok) throw new Error('Failed to save data');
       const savedEntry = await response.json();
-      setData((prev) => [...prev, {
-        tanggal: savedEntry.tanggal,
-        kodeBarang: savedEntry.kodeBarang,
-        deskripsi: savedEntry.deskripsi,
-        masuk: savedEntry.masuk,
-        keterangan: savedEntry.keterangan,
-      }]);
+      setData((prev) => [...prev, savedEntry]);
       setNewEntry({
         tanggal: '',
         kodeBarang: '',
@@ -259,7 +239,7 @@ function MasterDataMasukPage() {
         keterangan: '',
       });
       setIsModalOpen(false);
-      setSuccessMessage('Data masuk added successfully!');
+      setSuccessMessage('Entry added successfully!');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
@@ -268,7 +248,7 @@ function MasterDataMasukPage() {
   };
 
   const handleDownload = () => {
-    const headers = ['Tanggal', 'Kode Barang', 'Deskripsi', 'Masuk', 'Keterangan'];
+    const headers = ['Tanggal', 'Kode Barang', 'Deskripsi', 'Masuk', 'Vendor/Supplier'];
     const rows = filteredData.map(item => [
       item.tanggal,
       item.kodeBarang,
@@ -284,14 +264,11 @@ function MasterDataMasukPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'master_data_masuk.csv');
+    link.setAttribute('download', 'barang_masuk.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
-
-  const [activeEditRow, setActiveEditRow] = useState(null);
-  const [editingRowData, setEditingRowData] = useState({});
 
   const handleEditRow = (index) => {
     setActiveEditRow(index);
@@ -301,18 +278,21 @@ function MasterDataMasukPage() {
   const handleSaveRow = async (index) => {
     try {
       const item = sortedData[index];
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/barangmasuk/${item.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(editingRowData),
       });
       if (!response.ok) throw new Error('Failed to update data');
-      setSuccessMessage('Data masuk updated successfully!');
+      setSuccessMessage('Entry updated successfully!');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
       setActiveEditRow(null);
       setEditingRowData({});
-      // Refresh data
       const res = await fetch('http://localhost:5000/api/barangmasuk');
       setData(await res.json());
     } catch (error) {
@@ -327,23 +307,26 @@ function MasterDataMasukPage() {
 
   const handleEditRowChange = (e) => {
     const { name, value } = e.target;
-    setEditingRowData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEditingRowData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
     <div className="master-data-container">
-      <h1>MASTER DATA (MASUK)</h1>
+      <h1>BARANG MASUK</h1>
+      
       {showSuccess && (
-        <div className="success-popup">
+        <div className={`success-popup ${successMessage.includes('Failed') ? 'error' : ''}`}>
           <div className="success-content">
-            <i class="fa-solid fa-check"></i>
+            {successMessage.includes('Failed') ? (
+              <i className="fa-solid fa-xmark"></i>
+            ) : (
+              <i className="fa-solid fa-check"></i>
+            )}
             <p>{successMessage}</p>
           </div>
         </div>
       )}
+
       <div className="search-container">
         <input
           type="text"
@@ -366,32 +349,32 @@ function MasterDataMasukPage() {
             <input
               type="date"
               name="tanggal"
-              placeholder="Tanggal (DD/MM/YYYY)"
               value={newEntry.tanggal || ''}
               onChange={handleInputChange}
               className="new-entry-input"
+              required
             />
             <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              name="kodeBarang"
-              placeholder="Kode Barang"
-              value={newEntry.kodeBarang || ''}
-              onChange={handleInputChange}
-              className="new-entry-input"
-              autoComplete="off"
-              ref={kodeBarangInputRef}
-              onFocus={() => {
-              if (newEntry && newEntry.kodeBarang && newEntry.kodeBarang.length > 0) {
-                const filtered = masterData.filter((item) =>
-                  item.idBarang && item.idBarang.toLowerCase().includes(newEntry.kodeBarang.toLowerCase())
-                );
-                setFilteredMasterData(filtered);
-                setShowDropdown(true);
-              }
-              }}
-              style={{ display: 'block' }}
-            />
+              <input
+                type="text"
+                name="kodeBarang"
+                placeholder="Kode Barang"
+                value={newEntry.kodeBarang || ''}
+                onChange={handleInputChange}
+                className="new-entry-input"
+                autoComplete="off"
+                ref={kodeBarangInputRef}
+                onFocus={() => {
+                  if (newEntry.kodeBarang?.length > 0) {
+                    const filtered = masterData.filter((item) =>
+                      item.idBarang?.toLowerCase().includes(newEntry.kodeBarang.toLowerCase())
+                    );
+                    setFilteredMasterData(filtered);
+                    setShowDropdown(true);
+                  }
+                }}
+                required
+              />
               {showDropdown && filteredMasterData.length > 0 && (
                 <ul className="autocomplete-dropdown">
                   {filteredMasterData.map((item, index) => (
@@ -414,27 +397,29 @@ function MasterDataMasukPage() {
               onChange={handleInputChange}
               className="new-entry-input"
               readOnly
+              required
             />
             <input
               type="number"
               name="masuk"
-              placeholder="Masuk"
+              placeholder="Jumlah Masuk"
               value={newEntry.masuk || ''}
               onChange={handleInputChange}
               className="new-entry-input"
               min="0"
+              required
             />
             <input
               type="text"
               name="keterangan"
-              placeholder="Keterangan"
+              placeholder="Vendor/Supplier"
               value={newEntry.keterangan || ''}
               onChange={handleInputChange}
               className="new-entry-input"
             />
             <div className="modal-buttons">
               <button onClick={handleAddEntry} className="add-entry-button">
-                Masukkan Barang
+                Simpan
               </button>
               <button onClick={() => setIsModalOpen(false)} className="cancel-button">
                 Batal
@@ -445,119 +430,178 @@ function MasterDataMasukPage() {
       )}
 
       <div className="table-container">
-      <table className="masuk-table">
-        <thead>
-          <tr>
-            <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
-              TANGGAL {sortConfig?.key === 'tanggal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
-            </th>
-            <th onClick={() => handleSort('kodeBarang')} style={{ cursor: 'pointer' }}>
-              KODE BARANG {sortConfig?.key === 'kodeBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
-            </th>
-            <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
-              DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
-            </th>
-            <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
-              MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
-            </th>
-            <th>KETERANGAN</th>
-            {isAdmin && <th>AKSI</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((item, index) => (
-            <tr key={index}>
-              <td>
-                {activeEditRow === index ? (
-                  <input
-                    type="date"
-                    name="tanggal"
-                    value={editingRowData.tanggal}
-                    onChange={handleEditRowChange}
-                    className="input-cell"
-                  />
-                ) : (
-                  item.tanggal
-                )}
-              </td>
-              <td>{item.kodeBarang}</td>
-              <td>
-                {activeEditRow === index ? (
-                  <input
-                    type="text"
-                    name="deskripsi"
-                    value={editingRowData.deskripsi}
-                    onChange={handleEditRowChange}
-                    className="input-cell"
-                  />
-                ) : (
-                  item.deskripsi
-                )}
-              </td>
-              <td>{item.masuk}</td>
-              <td>
-                <div className="keterangan-container">
-                  <input
-                    type="text"
-                    value={editingKet[index] !== undefined ? editingKet[index] : (item.keterangan || '')}
-                    onChange={(e) => handleKetChange(index, e.target.value)}
-                    onFocus={() => handleKetFocus(index)}
-                    onBlur={() => handleKetBlur(index)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.target.blur();
-                      }
-                    }}
-                    className="input-cell"
-                  />
-                  {activeEdit === index && (
-                    <button
-                      onClick={() => handleSaveKet(index)}
-                      className="confirm-button"
-                      aria-label="Save Keterangan"
-                    >
-                      ✓
-                    </button>
-                  )}
-                </div>
-              </td>
-              {isAdmin && (
-                <td>
-                  <div className="aksi-buttons">
-                    {activeEditRow === index ? (
-                      <>
-                        <button className="confirm-button" onClick={() => handleSaveRow(index)}>Save</button>
-                        <button className="cancel-button" onClick={handleCancelEditRow}>Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className="edit-button"
-                          onClick={() => handleEditRow(index)}
-                          aria-label="Edit"
-                        >
-                          <i className="fa-solid fa-pen"></i>
-                        </button>
-                        <button
-                          className="delete-button"
-                          onClick={() => handleDelete(item.id)}
-                          aria-label="Delete"
-                        >
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              )}
+        <table className="masuk-table">
+          <thead>
+            <tr>
+              <th onClick={() => handleSort('tanggal')} style={{ cursor: 'pointer' }}>
+                TANGGAL {sortConfig?.key === 'tanggal' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('kodeBarang')} style={{ cursor: 'pointer' }}>
+                KODE BARANG {sortConfig?.key === 'kodeBarang' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('deskripsi')} style={{ cursor: 'pointer' }}>
+                DESKRIPSI {sortConfig?.key === 'deskripsi' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th onClick={() => handleSort('masuk')} style={{ cursor: 'pointer' }}>
+                MASUK {sortConfig?.key === 'masuk' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+              </th>
+              <th>VENDOR/SUPPLIER</th>
+              {isAdmin && <th>AKSI</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedData.map((item, index) => (
+              <tr key={index}>
+                <td>
+                  {activeEditRow === index ? (
+                    <input
+                      type="date"
+                      name="tanggal"
+                      value={editingRowData.tanggal}
+                      onChange={handleEditRowChange}
+                      className="input-cell"
+                    />
+                  ) : (
+                    item.tanggal
+                  )}
+                </td>
+                <td>
+                  {activeEditRow === index ? (
+                    <input
+                      type="text"
+                      name="kodeBarang"
+                      value={editingRowData.kodeBarang}
+                      onChange={handleEditRowChange}
+                      className="input-cell"
+                    />
+                  ) : (
+                    item.kodeBarang
+                  )}
+                </td>
+                <td>
+                  {activeEditRow === index ? (
+                    <input
+                      type="text"
+                      name="deskripsi"
+                      value={editingRowData.deskripsi}
+                      onChange={handleEditRowChange}
+                      className="input-cell"
+                    />
+                  ) : (
+                    item.deskripsi
+                  )}
+                </td>
+                <td>
+                  {activeEditRow === index ? (
+                    <input
+                      type="number"
+                      name="masuk"
+                      value={editingRowData.masuk}
+                      onChange={handleEditRowChange}
+                      className="input-cell"
+                      min="0"
+                    />
+                  ) : (
+                    item.masuk
+                  )}
+                </td>
+                <td>
+                  {activeEdit === index ? (
+                    <>
+                      <div className="vendor-input-overlay" onClick={() => setActiveEdit(null)} />
+                      <div className="vendor-input-container">
+                        <textarea
+                          value={editingKet[index] !== undefined ? editingKet[index] : (item.keterangan || '')}
+                          onChange={(e) => handleKetChange(index, e.target.value)}
+                          className="vendor-input"
+                          rows="4"
+                          autoFocus
+                          placeholder="Enter vendor/supplier information..."
+                        />
+                        <div className="vendor-input-buttons">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveKet(index);
+                            }}
+                            className="confirm-button"
+                          >
+                            <i className="fa-solid fa-check"></i> Simpan
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveEdit(null);
+                            }}
+                            className="cancel-button"
+                          >
+                            <i className="fa-solid fa-times"></i> Batal
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div 
+                      className="vendor-display" 
+                      onClick={() => {
+                        setEditingKet(prev => ({
+                          ...prev,
+                          [index]: item.keterangan || ''
+                        }));
+                        setActiveEdit(index);
+                      }}
+                    >
+                      {item.keterangan || <span className="placeholder">Klik untuk tambah vendor/supplier</span>}
+                    </div>
+                  )}
+                </td>
+                {isAdmin && (
+                  <td>
+                    <div className="aksi-buttons">
+                      {activeEditRow === index ? (
+                        <>
+                          <button 
+                            className="confirm-button" 
+                            onClick={() => handleSaveRow(index)}
+                          >
+                            <i className="fa-solid fa-check"></i>
+                          </button>
+                          <button 
+                            className="cancel-button" 
+                            onClick={handleCancelEditRow}
+                          >
+                            <i className="fa-solid fa-times"></i>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="edit-button"
+                            onClick={() => handleEditRow(index)}
+                            aria-label="Edit"
+                          >
+                            <i className="fa-solid fa-pen"></i>
+                          </button>
+                          <button
+                            className="delete-button"
+                            onClick={() => handleDelete(item.id)}
+                            aria-label="Delete"
+                          >
+                            <i className="fa-solid fa-trash"></i>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       
       <button className="download-button" onClick={handleDownload}>
-        DOWNLOAD
+        DOWNLOAD CSV
       </button>
 
       {editModalOpen && editItem && (
@@ -593,6 +637,7 @@ function MasterDataMasukPage() {
               value={editItem.masuk}
               onChange={e => setEditItem(prev => ({ ...prev, masuk: e.target.value }))}
               className="new-entry-input"
+              min="0"
             />
             <input
               type="text"
@@ -605,18 +650,21 @@ function MasterDataMasukPage() {
               <button
                 onClick={async () => {
                   try {
+                    const token = localStorage.getItem('token');
                     const response = await fetch(`http://localhost:5000/api/barangmasuk/${editItem.id}`, {
                       method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
                       body: JSON.stringify(editItem),
                     });
                     if (!response.ok) throw new Error('Failed to update data');
-                    setSuccessMessage('Data masuk updated successfully!');
+                    setSuccessMessage('Data updated successfully!');
                     setShowSuccess(true);
                     setTimeout(() => setShowSuccess(false), 3000);
                     setEditModalOpen(false);
                     setEditItem(null);
-                    // Refresh data
                     const res = await fetch('http://localhost:5000/api/barangmasuk');
                     setData(await res.json());
                   } catch (error) {
@@ -625,10 +673,10 @@ function MasterDataMasukPage() {
                 }}
                 className="add-entry-button"
               >
-                Save
+                Simpan
               </button>
               <button onClick={() => setEditModalOpen(false)} className="cancel-button">
-                Cancel
+                Batal
               </button>
             </div>
           </div>

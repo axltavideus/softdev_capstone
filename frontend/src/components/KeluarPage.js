@@ -215,7 +215,7 @@ function KeluarPage() {
 
   return (
     <div className="keluar-page">
-      <h1>MASTER DATA (KELUAR)</h1>
+      <h1>BARANG KELUAR</h1>
       {showSuccess && (
         <div className="success-popup">
           <div className="success-content">

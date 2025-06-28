@@ -3,6 +3,8 @@
   font-family: 'Inter', sans-serif;
   max-width: 1200px;
   margin: 0 auto;
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
 .master-data-container h1 {
@@ -64,6 +66,7 @@
 
 .table-container {
   margin-bottom: 1.5rem;
+  overflow-x: auto;
 }
 
 .masuk-table {
@@ -77,7 +80,7 @@
 }
 
 .masuk-table th {
-  background-color: #f2f2f2;
+  background-color: #f1f5f9;
   color: #334155;
   font-weight: 600;
   padding: 1rem;
@@ -97,12 +100,6 @@
 
 .masuk-table tr:hover td {
   background-color: #f8fafc;
-}
-
-.ket-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .input-cell {
@@ -125,14 +122,35 @@
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .confirm-button:hover {
   background-color: #3e8e41;
+}
+
+.cancel-button {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cancel-button:hover {
+  background-color: #e2e8f0;
 }
 
 .download-button {
@@ -208,19 +226,6 @@
   background-color: #3e8e41;
 }
 
-.cancel-button {
-  background-color: #f1f5f9;
-  color: #64748b;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cancel-button:hover {
-  background-color: #e2e8f0;
-}
-
 .success-popup {
   position: fixed;
   top: 20px;
@@ -234,6 +239,10 @@
   animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
 }
 
+.success-popup.error {
+  background-color: #ef4444;
+}
+
 .success-content {
   display: flex;
   align-items: center;
@@ -242,7 +251,6 @@
 
 .success-icon {
   font-size: 1.2rem;
-  font-weight: bold;
 }
 
 @keyframes slideIn {
@@ -278,7 +286,7 @@
 
 .masuk-table th:nth-child(3),
 .masuk-table td:nth-child(3) {
-  width: 50%;
+  width: 40%;
 }
 
 .masuk-table th:nth-child(4),
@@ -289,19 +297,12 @@
 
 .masuk-table th:nth-child(5),
 .masuk-table td:nth-child(5) {
-  width: 10%;
-  text-align: right;
+  width: 20%;
 }
 
 .masuk-table th:nth-child(6),
 .masuk-table td:nth-child(6) {
   width: 10%;
-  text-align: right;
-}
-
-.masterdata-masuk-page .masuk-table th:nth-child(5),
-.masterdata-masuk-page .masuk-table td:nth-child(5) {
-  width: 10%; /* KET */
 }
 
 .autocomplete-dropdown {
@@ -334,16 +335,17 @@
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   cursor: pointer;
   font-size: 0.95rem;
   transition: background 0.2s, transform 0.2s;
-  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-button:hover {
   background-color: #dc2626;
-  transform: translateY(-2px) scale(1.05);
 }
 
 .aksi-buttons {
@@ -357,13 +359,14 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 6px;
   border-radius: 4px;
   font-size: 1.1em;
   transition: background 0.2s, color 0.2s;
   outline: none;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .edit-button:hover {
@@ -371,3 +374,84 @@
   color: #0d47a1;
 }
 
+/* Vendor Input Styles */
+.vendor-input-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  width: 500px;
+  max-width: 90%;
+}
+
+.vendor-input {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  margin-bottom: 1rem;
+}
+
+.vendor-input-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.vendor-input-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.vendor-display {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  border: 1px dashed #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vendor-display:hover {
+  background-color: #f8fafc;
+}
+
+.placeholder {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .master-data-container {
+    padding: 1rem;
+  }
+
+  .masuk-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .vendor-input-container {
+    width: 90%;
+    padding: 1rem;
+  }
+
+  .vendor-input {
+    min-height: 100px;
+  }
+}
