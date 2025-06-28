@@ -18,8 +18,8 @@ module.exports = {
 
   async createProject(req, res) {
     try {
-      const { projectName, projectCode, progress } = req.body;
-      const project = await Project.create({ projectName, projectCode, progress });
+      const { projectName, projectCode, progress, dueDate } = req.body;
+      const project = await Project.create({ projectName, projectCode, progress, dueDate });
       res.status(201).json(project);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -42,10 +42,10 @@ module.exports = {
   async updateProject(req, res) {
     try {
       const { id } = req.params;
-      const { projectName, projectCode, progress } = req.body;
+      const { projectName, projectCode, progress, dueDate } = req.body;
       const project = await Project.findByPk(id);
       if (!project) return res.status(404).json({ error: 'Project not found' });
-      await project.update({ projectName, projectCode, progress });
+      await project.update({ projectName, projectCode, progress, dueDate });
       res.json(project);
     } catch (error) {
       res.status(500).json({ error: error.message });

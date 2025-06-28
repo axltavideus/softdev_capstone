@@ -20,6 +20,10 @@ module.exports = (sequelize) => {
       type: DataTypes.FLOAT,
       defaultValue: 0,
     },
+    dueDate: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   });
 
   return Project;

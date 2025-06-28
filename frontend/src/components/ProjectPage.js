@@ -24,12 +24,44 @@ function ProjectPage({ isAdmin }) {
   const [ocrResult, setOcrResult] = useState('');
   const [ocrTableData, setOcrTableData] = useState([]);
 
+  // Due date modal state
+  const [isDueDateModalOpen, setIsDueDateModalOpen] = useState(false);
+  const [dueDateInput, setDueDateInput] = useState('');
+
+  // Due date modal handlers
+  const openDueDateModal = () => {
+    setIsDueDateModalOpen(true);
+  };
+
+  const closeDueDateModal = () => {
+    setIsDueDateModalOpen(false);
+  };
+
+  const saveDueDate = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/projects/${id}`, {
+        projectName: project.projectName,
+        projectCode: project.projectCode,
+        progress: project.progress,
+        dueDate: dueDateInput,
+      });
+      setProject(prev => ({ ...prev, dueDate: dueDateInput }));
+      setIsDueDateModalOpen(false);
+      alert('Due date updated successfully.');
+    } catch (error) {
+      alert('Failed to update due date.');
+    }
+  };
+
   // Fetch project data
   useEffect(() => {
     const fetchProject = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/projects/${id}`);
         setProject(res.data);
+        if (res.data.dueDate) {
+          setDueDateInput(res.data.dueDate);
+        }
 
         // Initialize checkedStatus from bomItems
         const initialChecked = {};
@@ -371,6 +403,10 @@ function ProjectPage({ isAdmin }) {
     <div className="project-page">
       <h2>Project: {project.projectName}</h2>
       <p>Nomor SPK: {project.projectCode}</p>
+      <p>Due Date: {project.dueDate || 'Not set'}</p>
+      <button onClick={openDueDateModal} style={{ marginBottom: '20px' }}>
+        Set Due Date
+      </button>
       <p>Progress: <progress value={project.progress} max="1" style={{ width: '150px', height: '15px' }} /></p>
       {isAdmin && (
         <button
@@ -393,6 +429,22 @@ function ProjectPage({ isAdmin }) {
         >
           Delete Project
         </button>
+      )}
+      {isDueDateModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Set Due Date</h3>
+            <input
+              type="date"
+              value={dueDateInput}
+              onChange={(e) => setDueDateInput(e.target.value)}
+            />
+            <div className="modal-buttons">
+              <button onClick={saveDueDate}>Save</button>
+              <button onClick={() => setIsDueDateModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* <button className="button-print"onClick={handlePrint} style={{ marginBottom: '20px' }}>
