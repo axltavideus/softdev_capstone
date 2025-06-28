@@ -98,4 +98,18 @@ module.exports = {
       res.status(500).json({ error: error.message });
     }
   },
+
+  // Delete BarangKeluar record
+  async deleteBarangKeluar(req, res) {
+    try {
+      const { id } = req.params;
+      const deleted = await BarangKeluar.destroy({ where: { id } });
+      if (!deleted) {
+        return res.status(404).json({ message: 'BarangKeluar not found' });
+      }
+      res.json({ message: 'BarangKeluar deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };

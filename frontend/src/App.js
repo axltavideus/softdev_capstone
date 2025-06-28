@@ -9,6 +9,7 @@ import MasterDataMasukPage from './components/MasterDataMasukPage';
 import MasterData from './components/master_data';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import UserManagementPage from './components/UserManagementPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -54,7 +55,7 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {isAuthenticated && <Sidebar handleLogout={handleLogout} />}
+        {isAuthenticated && <Sidebar handleLogout={handleLogout} isAdmin={isAdmin} />}
         <main className="main-content">
           <Routes>
             <Route
@@ -67,12 +68,25 @@ function App() {
             />
             <Route
               path="/"
-              element={isAuthenticated ? <UploadPage onLogout={handleLogout} /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <UploadPage onLogout={handleLogout} isAdmin={isAdmin} /> : <Navigate to="/login" />}
             />
-            <Route path="/project/:id" element={<ProjectPage isAdmin={isAdmin} />} />
-            <Route path="/keluar" element={<KeluarPage />} />
-            <Route path="/masuk" element={<MasterDataMasukPage />} />
-            <Route path="/master_data" element={<MasterData />} />
+            <Route path="/project/:id" element={isAuthenticated ? <ProjectPage isAdmin={isAdmin} /> : <Navigate to="/login" />} />
+            <Route
+              path="/keluar"
+              element={isAdmin ? <KeluarPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/masuk"
+              element={isAdmin ? <MasterDataMasukPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/master_data"
+              element={isAdmin ? <MasterData /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/users"
+              element={isAdmin ? <UserManagementPage /> : <Navigate to="/" />}
+            />
           </Routes>
         </main>
       </div>

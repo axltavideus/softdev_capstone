@@ -3,9 +3,10 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './UploadPage.css';
 
-function UploadPage() {
+function UploadPage({ isAdmin }) {
   const [file, setFile] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [sortConfig, setSortConfig] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -45,31 +46,69 @@ function UploadPage() {
     }
   };
 
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev && prev.key === key) {
+        return { key, direction: prev.direction === 'ascending' ? 'descending' : 'ascending' };
+      }
+      return { key, direction: 'ascending' };
+    });
+  };
+
+  const sortedProjects = React.useMemo(() => {
+    if (!sortConfig) return projects;
+    const sorted = [...projects].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [projects, sortConfig]);
+
   return (
     <div className="upload-page">
-      <h2>Upload File Bill Of Material</h2>
-      <label htmlFor="fileInput">Nama File</label>
-      <input
-        id="fileInput"
-        type="file"
-        accept=".xlsx,.csv"
-        onChange={handleFileChange}
-      />
-      <button onClick={handleUpload} disabled={!file}>
-        Upload
-      </button>
+      {isAdmin && (
+        <>
+          <h2>Upload File Bill Of Material</h2>
+          <label htmlFor="fileInput">Nama File</label>
+          <input
+            id="fileInput"
+            type="file"
+            accept=".xlsx,.csv"
+            onChange={handleFileChange}
+          />
+          <button onClick={handleUpload} disabled={!file}>
+            Upload
+          </button>
+        </>
+      )}
 
       <h2>Daftar Projek</h2>
       <table className="project-table">
         <thead>
           <tr>
-            <th>Nama Projek</th>
-            <th>Kode Projek</th>
-            <th>Progress</th>
+            <th onClick={() => handleSort('projectName')} style={{ cursor: 'pointer' }}>
+              Nama Projek {sortConfig?.key === 'projectName' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('projectCode')} style={{ cursor: 'pointer' }}>
+              Kode Projek {sortConfig?.key === 'projectCode' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('progress')} style={{ cursor: 'pointer' }}>
+              Progress {sortConfig?.key === 'progress' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
           </tr>
         </thead>
         <tbody>
-          {projects.map((project) => (
+          {sortedProjects.map((project) => (
             <tr key={project.id}>
               <td>
                 <Link to={`/project/${project.id}`}>{project.projectName}</Link>

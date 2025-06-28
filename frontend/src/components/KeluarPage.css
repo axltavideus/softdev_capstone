@@ -50,7 +50,7 @@
   margin-bottom: 1.5rem;
 }
 
-.master-data-table {
+.master-data-keluar-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -60,26 +60,26 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.master-data-table th {
+.master-data-keluar-table th {
   background-color: #f2f2f2;
   color: #334155;
   font-weight: 600;
-  padding: 1rem;
+  padding: 0.5rem;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.master-data-table td {
+.master-data-keluar-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
 }
 
-.master-data-table tr:last-child td {
+.master-data-keluar-table tr:last-child td {
   border-bottom: none;
 }
 
-.master-data-table tr:hover td {
+.master-data-keluar-table tr:hover td {
   background-color: #f8fafc;
 }
 
@@ -246,6 +246,44 @@
   }
 }
 
+/* Style for action buttons in the AKSI column */
+.edit-button, .delete-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  margin: 0 2px;
+  border-radius: 4px;
+  font-size: 1.1em;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.edit-button {
+  color: #1976d2;
+}
+
+.edit-button:hover {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.delete-button {
+  color: #d32f2f;
+}
+
+.delete-button:hover {
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+/* Optional: style the icons if using FontAwesome */
+.edit-button i, .delete-button i {
+  pointer-events: none;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .keluar-page h1 {
@@ -325,6 +363,12 @@
     padding: 0.75rem;
     font-size: 1rem;
   }
+
+  .aksi-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -341,4 +385,11 @@
     font-size: 0.9rem;
     padding: 0.6rem;
   }
+}
+
+.aksi-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  align-items: center;
 }
