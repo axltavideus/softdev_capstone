@@ -102,6 +102,9 @@ function UploadPage({ isAdmin }) {
             <th onClick={() => handleSort('projectCode')} style={{ cursor: 'pointer' }}>
               Kode Projek {sortConfig?.key === 'projectCode' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
             </th>
+            <th onClick={() => handleSort('dueDate')} style={{ cursor: 'pointer' }}>
+              Due Date {sortConfig?.key === 'dueDate' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
+            </th>
             <th onClick={() => handleSort('progress')} style={{ cursor: 'pointer' }}>
               Progress {sortConfig?.key === 'progress' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
             </th>
@@ -114,6 +117,7 @@ function UploadPage({ isAdmin }) {
                 <Link to={`/project/${project.id}`}>{project.projectName}</Link>
               </td>
               <td>{project.projectCode}</td>
+              <td>{project.dueDate || 'Not set'}</td>
               <td>
                 <progress
                   value={project.progress}
