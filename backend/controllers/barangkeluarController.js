@@ -1,4 +1,6 @@
-const { Project, BomItem, BarangKeluar } = require('../models');
+const { Project, BomItem, BarangKeluar, MasterData } = require('../models');
+const { Op, fn, col, literal, where } = require('sequelize');
+const sequelize = require('../models').sequelize;
 
 module.exports = {
   // Get barang keluar data, optionally filtered by projectId
@@ -6,7 +8,6 @@ module.exports = {
     try {
       const { projectId } = req.query; // use query param for filtering
       const { search } = req.query;
-      const { Op } = require('sequelize');
       let whereClause = {};
       let bomItemWhereClause = undefined;
 
@@ -32,19 +33,95 @@ module.exports = {
           where: bomItemWhereClause,
           include: [{
             model: Project,
-            attributes: ['projectName'],
+            attributes: ['projectName', 'projectCode'],
           }],
         }],
       });
-      // Map the result to include projectName at top level for convenience
+      // Map the result to include projectName and projectCode at top level for convenience
       const result = barangKeluar.map(item => {
         const projectName = item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectName : null;
+        const projectCode = item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectCode : null;
         return {
           ...item.toJSON(),
           namaProjek: projectName,
+          projectCode: projectCode,
         };
       });
       res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  // New endpoint to get frequently used and almost out of stock items
+  async getFrequentLowStockItems(req, res) {
+    try {
+      // Threshold for low stock, can be adjusted
+      const LOW_STOCK_THRESHOLD = 10;
+
+      // 1. Get the item with the highest totalKeluar (most frequently issued)
+      const mostFrequentUsage = await BarangKeluar.findAll({
+        attributes: [
+          'bomItemId',
+          [fn('SUM', col('keluar')), 'totalKeluar']
+        ],
+        group: ['bomItemId'],
+        order: [[literal('totalKeluar'), 'DESC']],
+        limit: 1,
+      });
+
+      const mostFrequentBomItemId = mostFrequentUsage.length > 0 ? mostFrequentUsage[0].bomItemId : null;
+
+      // 2. Get the item with the lowest stock (almost out of stock)
+      // Join BomItem and MasterData on idBarang
+      const almostOutOfStockItem = await BomItem.findOne({
+        attributes: ['id', 'idBarang', 'deskripsi'],
+        include: [{
+          model: MasterData,
+          attributes: ['stockAkhir'],
+          required: true,
+          where: {
+            stockAkhir: { [Op.lte]: LOW_STOCK_THRESHOLD }
+          }
+        }],
+      });
+
+      // Fetch details for most frequent item with stock from MasterData
+      let mostFrequentItem = null;
+      if (mostFrequentBomItemId) {
+        mostFrequentItem = await BomItem.findOne({
+          where: { id: mostFrequentBomItemId },
+          attributes: ['id', 'idBarang', 'deskripsi'],
+          include: [{
+            model: MasterData,
+            attributes: ['stockAkhir'],
+            required: false,
+          }],
+        });
+      }
+
+      // Map usage for most frequent item
+      const mostFrequentTotalKeluar = mostFrequentUsage.length > 0 ? parseInt(mostFrequentUsage[0].get('totalKeluar'), 10) : 0;
+
+      // Prepare response
+      const response = {
+        mostFrequent: mostFrequentItem ? {
+          id: mostFrequentItem.id,
+          idBarang: mostFrequentItem.idBarang,
+          deskripsi: mostFrequentItem.deskripsi,
+          stock: mostFrequentItem.MasterData ? mostFrequentItem.MasterData.stockAkhir : 0,
+          totalKeluar: mostFrequentTotalKeluar,
+        } : null,
+        almostOutOfStock: almostOutOfStockItem ? {
+          id: almostOutOfStockItem.id,
+          idBarang: almostOutOfStockItem.idBarang,
+          deskripsi: almostOutOfStockItem.deskripsi,
+          stock: almostOutOfStockItem.MasterData ? almostOutOfStockItem.MasterData.stockAkhir : 0,
+          totalKeluar: 0, // unknown or not relevant here
+        } : null,
+      };
+
+      res.json(response);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -110,6 +187,33 @@ module.exports = {
       res.json({ message: 'BarangKeluar deleted successfully' });
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Update BarangKeluar record by id
+  async updateBarangKeluar(req, res) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const barangKeluar = await BarangKeluar.findByPk(id);
+      if (!barangKeluar) {
+        return res.status(404).json({ error: 'BarangKeluar item not found' });
+      }
+
+      // Whitelist allowed fields to update
+      const allowedFields = ['tanggal', 'deskripsi', 'keluar', 'keterangan', 'namaProjek'];
+      const filteredData = {};
+      for (const field of allowedFields) {
+        if (updateData.hasOwnProperty(field)) {
+          filteredData[field] = updateData[field];
+        }
+      }
+
+      await barangKeluar.update(filteredData);
+      res.json(barangKeluar);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   },
 };

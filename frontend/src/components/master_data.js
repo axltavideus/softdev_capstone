@@ -408,43 +408,20 @@ const MasterData = () => {
                 <td>{item.deskripsi}</td>
                 <td>
                   <div className="stok-awal-container">
-                    <input
-                      type="number"
-                      value={inputs.stokAwal}
-                      onChange={(e) => handleInputChange(e, item.id, 'stokAwal')}
-                      onFocus={() => handleStokAwalFocus(item.id)}
-                      onBlur={() => handleStokAwalBlur(item.id)}
-                      className="input-cell"
-                    />
-                    {activeEdit === item.id && (
-                      <button 
-                        onClick={() => handleSaveStokAwal(item.id)}
-                        className="confirm-button"
-                      >
-                        ✓
-                      </button>
-                    )}
-                  </div>
-                </td>
-                <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td>
-                <td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td>
-                <td>{item.stockAkhir !== undefined ? Number(item.stockAkhir).toFixed(2) : '-'}</td>
+                    <input type="number" value={inputs.stokAwal} 
+                    onChange={(e) => handleInputChange(e, item.id, 'stokAwal')} 
+                    onFocus={() => handleStokAwalFocus(item.id)} 
+                    onBlur={() => handleStokAwalBlur(item.id)} className="input-cell" />
+                    {activeEdit === item.id && (<button onClick={() => handleSaveStokAwal(item.id)} className="confirm-button">✓</button>)}
+                    </div></td>
+                <td>{item.masuk !== undefined ? Number(item.masuk).toFixed(2) : '-'}</td><td>{item.keluar !== undefined ? Number(item.keluar).toFixed(2) : '-'}</td><td>{item.stockAkhir !== undefined ? Number(item.stockAkhir).toFixed(2) : '-'}</td>
                 <td>
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDelete(item.id)}
-                    aria-label="Delete"
-                  >
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                  <button
-                    className="edit-button"
-                    onClick={() => handleEditClick(item)}
-                    aria-label="Edit"
-                  >
-                    <i class="fa-solid fa-pencil"></i>
-                  </button>
-                </td>
+                  <button className="delete-button" 
+                  onClick={() => handleDelete(item.id)} aria-label="Delete">
+                    <i className="fa-solid fa-trash"></i></button>
+                    <button className="edit-button" onClick={() => handleEditClick(item)} aria-label="Edit">
+                      <i className="fa-solid fa-pencil"></i></button>
+                      </td>
               </tr>
             );
           })}

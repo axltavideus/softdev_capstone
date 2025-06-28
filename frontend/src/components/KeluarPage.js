@@ -97,6 +97,7 @@ function KeluarPage() {
       item.deskripsi,
       item.keluar,
       item.keterangan || '-',
+      item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectCode : '-',
       item.namaProjek,
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,';
@@ -257,6 +258,9 @@ function KeluarPage() {
                 KELUAR {sortConfig?.key === 'keluar' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
               </th>
               <th>KET</th>
+              <th>
+                NOMOR SPKt
+              </th>
               <th onClick={() => handleSort('namaProjek')} style={{ cursor: 'pointer' }}>
                 Project {sortConfig?.key === 'namaProjek' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : ''}
               </th>
@@ -275,8 +279,8 @@ function KeluarPage() {
                       {expandedKeterangan === item.id ? (
                         <>
                           <textarea
-                            value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan || '')}
-                            onChange={(e) => handleKeteranganChange(item.id, e.target.value)}
+                            value={editingKeterangan[item.id] !== undefined ? editingKeterangan[item.id] : (item.keterangan ?? '')}
+                            onChange={(e) => handleKeteranganChange(item.id, e.target.value ?? '')}
                             className="keterangan-textarea"
                             autoFocus
                             onBlur={() => handleKeteranganBlur(item.id)}
@@ -306,6 +310,7 @@ function KeluarPage() {
                       )}
                   </div>
                 </td>
+                <td>{item.BomItem && item.BomItem.Project ? item.BomItem.Project.projectCode : '-'}</td>
                 <td>{item.namaProjek}</td>
                 <td>
                   <div className="aksi-buttons">
@@ -343,7 +348,7 @@ function KeluarPage() {
               <input
                 type="date"
                 name="tanggal"
-                value={editItem.tanggal.split('T')[0]}
+                value={editItem && editItem.tanggal ? editItem.tanggal.split('T')[0] : ''}
                 onChange={handleEditChange}
                 className="edit-input"
               />
@@ -353,7 +358,7 @@ function KeluarPage() {
               <input
                 type="text"
                 name="idBarang"
-                value={editItem.BomItem ? editItem.BomItem.idBarang : ''}
+                value={editItem && editItem.BomItem && editItem.BomItem.idBarang ? editItem.BomItem.idBarang : ''}
                 onChange={handleEditChange}
                 className="edit-input"
                 disabled
@@ -364,7 +369,7 @@ function KeluarPage() {
               <input
                 type="text"
                 name="deskripsi"
-                value={editItem.deskripsi}
+                value={editItem.deskripsi ?? ''}
                 onChange={handleEditChange}
                 className="edit-input"
               />
@@ -374,7 +379,7 @@ function KeluarPage() {
               <input
                 type="number"
                 name="keluar"
-                value={editItem.keluar}
+                value={editItem.keluar ?? ''}
                 onChange={handleEditChange}
                 className="edit-input"
               />
@@ -383,7 +388,7 @@ function KeluarPage() {
               <label>Keterangan</label>
               <textarea
                 name="keterangan"
-                value={editItem.keterangan}
+                value={editItem.keterangan ?? ''}
                 onChange={handleEditChange}
                 className="edit-textarea"
               />
@@ -393,7 +398,7 @@ function KeluarPage() {
               <input
                 type="text"
                 name="namaProjek"
-                value={editItem.namaProjek}
+                value={editItem.namaProjek ?? ''}
                 onChange={handleEditChange}
                 className="edit-input"
               />

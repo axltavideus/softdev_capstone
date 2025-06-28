@@ -7,10 +7,21 @@ function UploadPage({ isAdmin }) {
   const [file, setFile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [sortConfig, setSortConfig] = useState(null);
+  const [frequentLowStockItems, setFrequentLowStockItems] = useState({ mostFrequent: null, almostOutOfStock: null });
 
   useEffect(() => {
     fetchProjects();
+    fetchFrequentLowStockItems();
   }, []);
+
+  const fetchFrequentLowStockItems = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/barangkeluar/frequent-low-stock');
+      setFrequentLowStockItems(res.data);
+    } catch (error) {
+      console.error('Error fetching frequent low stock items:', error);
+    }
+  };
 
   const fetchProjects = async () => {
     try {
@@ -76,21 +87,73 @@ function UploadPage({ isAdmin }) {
 
   return (
     <div className="upload-page">
-      {isAdmin && (
-        <>
-          <h2>Upload File Bill Of Material</h2>
-          <label htmlFor="fileInput">Nama File</label>
-          <input
-            id="fileInput"
-            type="file"
-            accept=".xlsx,.csv"
-            onChange={handleFileChange}
-          />
-          <button onClick={handleUpload} disabled={!file}>
-            Upload
-          </button>
-        </>
-      )}
+      <div className="upload-top-section">
+        {isAdmin && (
+          <div className="upload-bom-section">
+            <h2>Upload File Bill Of Material</h2>
+            <label htmlFor="fileInput">Nama File</label>
+            <input
+              id="fileInput"
+              type="file"
+              accept=".xlsx,.csv"
+              onChange={handleFileChange}
+            />
+            <button onClick={handleUpload} disabled={!file}>
+              Upload
+            </button>
+          </div>
+        )}
+
+        <div className="frequent-low-stock-card">
+          <h3>Barang Paling Sering Keluar & Hampir Habis</h3>
+          {!frequentLowStockItems.mostFrequent && !frequentLowStockItems.almostOutOfStock ? (
+            <p>Tidak ada data barang yang hampir habis.</p>
+          ) : (
+            <>
+              {frequentLowStockItems.mostFrequent && (
+                <div>
+                  <h4>Paling Sering Keluar</h4>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Deskripsi</th>
+                        <th>Stok</th>
+                        <th>Jumlah Keluar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr key={frequentLowStockItems.mostFrequent.id}>
+                        <td>{frequentLowStockItems.mostFrequent.deskripsi}</td>
+                        <td>{frequentLowStockItems.mostFrequent.stock}</td>
+                        <td>{frequentLowStockItems.mostFrequent.totalKeluar}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {frequentLowStockItems.almostOutOfStock && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Hampir Habis</h4>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Deskripsi</th>
+                        <th>Stok</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr key={frequentLowStockItems.almostOutOfStock.id}>
+                        <td>{frequentLowStockItems.almostOutOfStock.deskripsi}</td>
+                        <td>{frequentLowStockItems.almostOutOfStock.stock}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
       <h2>Daftar Projek</h2>
       <table className="project-table">
@@ -115,11 +178,14 @@ function UploadPage({ isAdmin }) {
               </td>
               <td>{project.projectCode}</td>
               <td>
-                <progress
-                  value={project.progress}
-                  max="1"
-                  style={{ width: '150px', height: '15px', color: 'green' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <progress
+                    value={project.progress}
+                    max="1"
+                    style={{ width: '150px', height: '15px', color: 'green' }}
+                  />
+                  <span>{Math.round(project.progress * 100)}%</span>
+                </div>
               </td>
             </tr>
           ))}
