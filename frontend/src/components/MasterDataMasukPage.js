@@ -177,7 +177,8 @@ function MasterDataMasukPage() {
     // Hide dropdown immediately after item selection
     setShowDropdown(false);
     if (kodeBarangInputRef.current) {
-      kodeBarangInputRef.current.focus();
+      // Blur input to prevent dropdown reopening on focus
+      kodeBarangInputRef.current.blur();
     }
   };
 
@@ -411,7 +412,6 @@ function MasterDataMasukPage() {
               name="deskripsi"
               placeholder="Deskripsi"
               value={newEntry.deskripsi || ''}
-              onChange={handleInputChange}
               className="new-entry-input"
               readOnly
             />
